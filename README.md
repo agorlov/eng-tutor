@@ -1,13 +1,36 @@
-# Eng-tutor - бот для изучения английского
+# Anna - a bot for learning English 
+
+It's LLM based bot.
+
+Created to teach how to formulate thoughts in English.
+Many people can read in English, it is usually more difficult to formulate thoughts in a foreign language.
 
 ![image](https://github.com/agorlov/eng-tutor/assets/2485728/7bf0d2b2-346c-4e1d-b7eb-06af5939851d)
 
+https://t.me/anna2_gpt_tutor_bot
+
+
+## Development notes
+
+How to start Bot: ``docker-compose up``
+
+Database (adminer tool): http://localhost:8082/
+
+
+### DB Container
+
+Postgres container doc:\
+https://github.com/docker-library/docs/blob/master/postgres/README.md
+
+# Ideas behind (Russian)
+
+## Eng-tutor - бот для изучения английского
+
 Создан чтобы обучать формулировать мысли на английском.
+Читать на английском могут многие, обычно сложнее с формулированием мыслей на иностранном языке.
 
-Сейчас работает на основе платформы https://coze.com -  видимо Китайцы сделали, но сделали хорошо.\
+Прототип работает на основе low-code платформы https://coze.com (хорошо кстати сделана, Китайская)\
 Она подключена к движкам OpenAI (GPT-3.5, GPT-4, Dalle-E)
-
-Доступ работает из России без VPN, а вот из европы не пускает, забавно.
 
 Бот в телеге, с ним можно пообщаться:\
 https://t.me/anna_gpt_tutor_bot
@@ -19,10 +42,6 @@ https://www.coze.com/store/bot/7336223581640163334?from=bots_card
 
 Делал в первую очередь для себя, чтобы лучше научиться говорить и думать на английском.
 Да и это возможность для меня лучше познакмиться с техниками промпт-инженерии и интеграции LLM с БД.
-
-
-Первая попытка сделать такого тренера была с Каримом около года назад, но не завершена: https://github.com/Oftendev/Phraseng
-на веб-технологиях без LLM, для практики
 
 ## Пример диалога
 

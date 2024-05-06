@@ -1,0 +1,10 @@
+.git/
+tmp/
+__pycache__/
+voice_done/**
+voice_inbound/**
+config.py
+rsync-exclude.txt
+docker-compose.yaml
+README
+app.log

@@ -1,0 +1,60 @@
+version: '3.5'
+
+services:
+  annadb:
+    container_name: annadb
+    ports:
+      - "5432:5432"
+    image: postgres:14.3-alpine
+    environment:
+      POSTGRES_USER: anna
+      POSTGRES_PASSWORD: anna
+    volumes:
+      - annadb-volume:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - my-network
+
+  anna_bot:
+    container_name: anna_bot
+    build: .
+    # restart: always
+    depends_on:
+      - annadb
+    volumes:
+      - .:/app
+    networks:
+      - my-network
+    command: python bot.py
+
+
+  anna_cron:
+    container_name: anna_cron
+    environment:
+      TZ: Etc/GMT-3
+    build: .
+    depends_on:
+      - annadb
+    volumes:
+      - .:/app
+    networks:
+      - my-network      
+    command: cron -f
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
+    depends_on:
+      - annadb
+    networks:
+      - my-network      
+
+volumes:
+  annadb-volume:
+
+
+networks:
+  my-network:
+    driver: bridge
