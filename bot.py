@@ -3,7 +3,8 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from openai import OpenAI
 import logging
 
-from config import TG_BOT_TOKEN, DBCONN, OPENAI_API_KEY
+from config import TG_BOT_TOKEN, DBCONN, OPENAI_API_KEY, OPENAI_API_BASEURL
+from src.system_prompt_ru import SYSTEM_PROMPT, GREETING
 
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -14,9 +15,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 bot = telebot.TeleBot(TG_BOT_TOKEN)
-gpt = OpenAI(api_key=OPENAI_API_KEY)
+gpt = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASEURL)
 
-SYSTEM_PROMPT = "You are GPT. Your name is Anna. Answer as concisely as possible."
+
 
 # Словарь для хранения контекста
 user_context = {}
@@ -25,7 +26,7 @@ user_context = {}
 # /start
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, "Hello! I'am Anna!")
+    bot.send_message(message.chat.id, GREETING)
 
 
 @bot.message_handler(commands=['clear'])
@@ -58,7 +59,7 @@ def echo_all(message):
         # logging.debug(response)
         user_context[user_id].append({"role": "assistant", "content": assistant_message})
 
-        bot.reply_to(message, assistant_message)
+        bot.send_message(message.chat.id, assistant_message)
 
         logging.info(f"Sent {user_id}: {assistant_message}")
         
