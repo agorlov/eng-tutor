@@ -8,6 +8,7 @@ from src.system_prompt_ru import SYSTEM_PROMPT, GREETING
 
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from src.agent_boss import AgentBoss
 
 
 # Настроим логирование
@@ -39,33 +40,24 @@ def clear_context(message):
 def echo_all(message):
     user_id = message.chat.id
     logging.info(f"Rcv {user_id}: {message.text}")
+    
+    boss = AgentBoss(gpt, user_context, user_id)
 
-    # Если контекст пуст, инициализируем его с системным сообщением
-    if user_id not in user_context or not user_context[user_id]:
-        user_context[user_id] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    response = boss.process_user_message(message.text)
+    logging.info(f"Boss rsp {user_id}: {response}")
+    bot.send_message(message.chat.id, response)    
 
-    # Добавляем новое сообщение пользователя в контекст
-    user_context[user_id].append({"role": "user", "content": message.text})
+    # try:        
+    #     response = boss.process_user_message(message.text)
+    #     logging.info(f"Boss rsp {user_id}: {assistant_message}")
+    #     bot.send_message(message.chat.id, response)
+    # except Exception as e:
+    #     logging.error(f"Unexpected error: {e}")
+    #     bot.reply_to(message, str(e))
 
-    try:
-        # Получаем ответ от OpenAI
-        response = gpt.chat.completions.create(
-            messages=user_context[user_id],
-            model="gpt-3.5-turbo"
-        )
 
-        # Добавляем ответ от ассистента в контекст
-        assistant_message = response.choices[0].message.content
-        # logging.debug(response)
-        user_context[user_id].append({"role": "assistant", "content": assistant_message})
 
-        bot.send_message(message.chat.id, assistant_message)
 
-        logging.info(f"Sent {user_id}: {assistant_message}")
-        
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        bot.reply_to(message, f"Произошла ошибка при обращении к OpenAI API. Попробуйте позже.\n" + str(e))
 
 
 # Run Anna
