@@ -55,10 +55,5 @@ def echo_all(message):
     #     logging.error(f"Unexpected error: {e}")
     #     bot.reply_to(message, str(e))
 
-
-
-
-
-
 # Run Anna
 bot.polling(none_stop=True)
