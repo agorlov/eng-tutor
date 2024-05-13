@@ -1,6 +1,7 @@
 import logging
 import requests
 import json
+from .agent_translator import AgentTranslator
 from pprint import pprint
 
 BOSS_INSTRUCTION = """
@@ -66,6 +67,19 @@ class AgentBoss:
         self.gpt = gpt
         self.context = context
         self.user_id = user_id
+
+    def askgpt(self):
+        resp = self.gpt.chat.completions.create(
+            messages=self.context[self.user_id],
+            model="gpt-3.5-turbo-0613", # model="gpt-3.5-turbo" или gpt-3.5-turbo-instruct
+            tools=self.myfuncs(),
+            tool_choice="auto"
+        )
+
+        logging.info("Boss response: ")
+        logging.info(resp)
+
+        return resp.choices[0].message
     
     def process_user_message(self, message):
 
@@ -75,23 +89,9 @@ class AgentBoss:
         self.add_context(message)
 
         # Получаем ответ от OpenAI
-        response = self.gpt.chat.completions.create(
-            messages=self.context[self.user_id],
-            model="gpt-3.5-turbo-0613", # model="gpt-3.5-turbo" или gpt-3.5-turbo-instruct
-            tools=self.myfuncs(),
-            tool_choice="auto"
-        )
-
-        print("Response: ")
-        print(response)
-        logging.info(response)
-
-        # Обработка вызовов функций из ответа 
-        choice = response.choices[0].message
+        choice = self.askgpt()
 
         if choice.tool_calls:
-            
-            # logging.info(choice)
 
             function_name = choice.tool_calls[0].function.name
             arguments = json.loads(choice.tool_calls[0].function.arguments)
@@ -115,13 +115,19 @@ class AgentBoss:
                   self.context[self.user_id].append(
                       {"role": "function", "tool_call_id": choice.tool_calls[0].id, "name": function_name, "content": func_result}
                   )
-
                   logging.info(f"Assistant to {self.user_id} FUNC RES: {func_result}")
 
-                  # pprint(self.context)
+                  resp2 = self.askgpt()
 
-            anna_message = f"Обращение к функци `{function_name}` выполнено: {func_result}"
+                  self.context[self.user_id].append({"role": "assistant", "content": resp2.content})
 
+                  anna_message = resp2.content
+
+               else:
+                  raise Exception(f"Function {function_name} returned None")
+            else:
+               raise Exception(f"Unknown function {function_name}")
+            
         else:
            anna_message = choice.content
            self.context[self.user_id].append({"role": "assistant", "content": anna_message})
@@ -169,5 +175,17 @@ class AgentBoss:
       # print("Func call! send_task_to_assistant (print)")
       # logging.info("Func call! send_task_to_assistant (logging)")
       # logging.info(arguments)
+      if arguments['assistant_name'] == "Translator":
+          print(f"to TRANSLATOR {arguments['task']}")
+          tr = AgentTranslator(self.gpt)
+          return tr.process_user_message(arguments['task'])
+      elif arguments['assistant_name'] == "Reviewer":
+          print(f"to REVIEWER {arguments['task']}")
+      elif arguments['assistant_name'] == "Session Planner":
+          print(f"to SESSION PLANNER {arguments['task']}")
+      elif arguments['assistant_name'] == "Teacher":
+          print(f"to TEACHER {arguments['task']}")
+      else:
+          print("Unknown assistant name")
       
       return f"to AGENT {arguments['assistant_name']}" # : {arguments['task']}; role={arguments['role']}"

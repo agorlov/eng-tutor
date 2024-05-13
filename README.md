@@ -19,6 +19,12 @@ How to start Bot: ``docker-compose up``
 Database (adminer tool): http://localhost:8082/
 
 
+### Debuging
+For debugging purposes, there is a container `anna_debug` that you can use to run the bot.
+Simply enter the container and run `python bot.py`
+To avoid restarting the container every time, it's better to stop the `anna_bot` container while working in `anna_debug`
+
+
 ### DB Container
 
 Postgres container doc:\
