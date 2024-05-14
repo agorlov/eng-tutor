@@ -2,6 +2,7 @@ import logging
 import requests
 import json
 from .agent_translator import AgentTranslator
+from .agent_session_planner import AgentSessionPlanner
 from pprint import pprint
 
 BOSS_INSTRUCTION = """
@@ -183,6 +184,10 @@ class AgentBoss:
           print(f"to REVIEWER {arguments['task']}")
       elif arguments['assistant_name'] == "Session Planner":
           print(f"to SESSION PLANNER {arguments['task']}")
+          splanner = AgentSessionPlanner(self.gpt, student_level = "beginner", phrases_for_repetition = [], language = "Russian", topic = "Choose please for me")
+          plan = splanner.run(arguments['task'])
+          print(f"Session plan: {plan}")
+          return plan
       elif arguments['assistant_name'] == "Teacher":
           print(f"to TEACHER {arguments['task']}")
       else:
