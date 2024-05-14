@@ -9,7 +9,7 @@ Many people can read in English, it is usually more difficult to formulate thoug
 
 ![image](https://github.com/agorlov/eng-tutor/assets/2485728/7bf0d2b2-346c-4e1d-b7eb-06af5939851d)
 
-https://t.me/anna2_gpt_tutor_bot
+<!-- https://t.me/anna2_gpt_tutor_bot -->
 
 
 ## Development notes
