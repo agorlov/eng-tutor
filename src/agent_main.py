@@ -4,31 +4,41 @@ import json
 from .agent_translator import AgentTranslator
 from .agent_session_planner import AgentSessionPlanner
 from .simple_gpt import SimpleGPT
+from .state_switcher import StateSwitcher
+
+# ### Skill 1: Greeting and Introduction
+
+# When the learner greets you, present the following options:
+
+# - **Learning Session:** Propose starting a learning session.
+# - **Text Translation:** Offer to translate any text they provide.
+
 
 MAIN_INSTRUCTION = """
 # Your Role
 
-You are an expert assistant in learning foreign languages, known for your outstanding skills. You are also a cheerful girl named Anna, who prefers informal communication and enjoys making jokes. Your students are grateful for your dedication. Always communicate with the student in their native language, which they use to write to you.
+You are genius in learning foreign languages.
+You are also a cheerful girl named Anna, who prefers informal communication and enjoys making jokes.
+Always communicate with the student in their native language, which they use to write to you.
 
 ## Skills
 
-### Skill 1: Greeting and Introduction
+### Skill: Learning Facilitation
 
-When the learner greets you, present the following options:
+Твоя задача поприветствовать пользователя и предложить позаниматься или переводить текст.
 
-- **Learning Session:** Propose starting a learning session.
-- **Text Translation:** Offer to translate any text they provide.
+Как только пользователь скажет, что хочет начать урок - передай диалог с помощью команды SWITCH Session Planner.
+Как только пользователь скажет, что хочет перевести - передай диалог с помощью команды SWITCH Translator.
 
-### Skill 2: Learning Facilitation
-
-You are part of a team of assistants. Your role is to coordinate them. Write text "SWITCH [Assistant Name]" to switch to a different assistant. The next string can contain instructions for the new assistant. Responses without "SWITCH" are sent to the student.
+You must respond in two ways:
+1. With student - write text as usual.
+2. To switch to another assistant - write command "SWITCH [Assistant Name]" on the first string of response.
+   Write on the next string instructions for this assistant. 
 
 #### Your Assistants
 
 1. **Session Planner** - Chooses topics, determines difficulty, and plans sessions. `assistant_name="Session Planner"`
-2. **Teacher** - Conducts the session, requiring information on the topic and difficulty. `assistant_name="Teacher"`
-3. **Translator** - Assists in translating texts. `assistant_name="Translator"`
-4. **Reviewer** - Evaluates the session and ensures the results are saved in the database. `assistant_name="Reviewer"`
+2. **Translator** - Assists in translating texts. `assistant_name="Translator"`
 
 #### Assistants Switching
 
@@ -77,6 +87,7 @@ SWITCH Translator
 
 """
 
+        
 
 
 
@@ -86,6 +97,7 @@ class AgentMain:
         self.tg = tg
         self.state = state
         self.user_id = user_id
+        self.switcher = StateSwitcher(state)
 
     
     def run(self, message):
@@ -94,14 +106,24 @@ class AgentMain:
 
         # если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента, а если нет, то отправляем сообщение студенту
         if "SWITCH" in answer:
-            assistant_name = answer.split()[1]
-            print("Switching to " + assistant_name)
-            print("Answer: " + answer)
+
+            firstline = answer.splitlines()[0]
+            assistant_name = firstline.split(maxsplit=1)[1]
+            
+            # взять вторую и последующие строки ответа из answer
+            task = answer.splitlines()[1:]
+            task = '\n'.join(task)
+            
+            print(f"!Task: {task}")
+
+
+            self.switcher.switch(assistant_name, task)
+            
 
 
             # self.state[self.user_id] = assistant_name
             # self.tg.send_message(self.user_id, f"Switched to {assistant_name}")
         else:
-            print("Answer to user: " + answer)
+            print("!Answer to user: " + answer)
             self.tg.send_message(self.user_id, answer)
         

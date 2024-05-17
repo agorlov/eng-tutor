@@ -23,6 +23,8 @@ gpt = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASEURL)
 # Словарь для хранения контекста
 user_context = {}
 
+current_agent = {}
+
 
 # /start
 @bot.message_handler(commands=['start'])
@@ -41,10 +43,25 @@ def echo_all(message):
     user_id = message.chat.id
     logging.info(f"Rcv {user_id}: {message.text}")
     
-    boss = AgentBoss(gpt, user_context, user_id)
+    
+    # Если в current_agent нет агента для пользователя, то создадим его
+    if user_id not in current_agent:
+        current_agent[user_id]['boss'] = AgentBoss(gpt, user_context, user_id)
+    
 
-    response = boss.process_user_message(message.text)
+    if current_agent[user_id] == 'AgentBoss':
+        boss = AgentBoss(gpt, user_context, user_id) # Кто обрабатывает?
+        response = boss.process_user_message(message.text)
+        
+    elif current_agent[user_id] == 'AgentTeacher':
+        teacher = AgentTeacher(gpt)
+        response = teacher.run(message.text)
+    
+    
+    
     logging.info(f"Boss rsp {user_id}: {response}")
+
+
     bot.send_message(message.chat.id, response)    
 
     # try:        

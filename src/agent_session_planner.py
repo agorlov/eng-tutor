@@ -28,6 +28,8 @@ Please return the topic and the phrases in the following structured format:
 
 ```
 Topic: [Lesson Topic]
+Native language: [Native Language]
+Studied language: [Studied Language]
 Phrases:
 1. [Phrase 1]
 2. [Phrase 2]
@@ -37,6 +39,23 @@ Phrases:
 6. [Phrase 6]
 7. [Phrase 7]
 ```
+
+Example for Russian:
+
+```
+Topic: погода
+Native language: русский
+Studied language: english
+Phrases:
+1. Сегодня солнечно.
+2. Какая погода сегодня?
+3. Сегодня будет ясно.
+4. Завтра будет дождливо.
+5. Вчера был шторм.
+6. Очень сильный ветер.
+7. Весной бывают заморозки.
+```
+
 
 ### Limitations
 

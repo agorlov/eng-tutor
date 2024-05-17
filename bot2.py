@@ -6,6 +6,7 @@ from src.system_prompt_ru import GREETING
 import telebot
 from src.agent_main import AgentMain
 from src.agent_translator import AgentTranslator
+from src.agent_session_planner import AgentSessionPlanner
 
 
 # Настроим логирование
@@ -28,12 +29,15 @@ def init_user_context(user_id):
         'agents': {}
     }
 
-    user_context[user_id]['agent'] = AgentMain(tg, user_context[user_id], user_id)
+    main = AgentMain(tg, user_context[user_id], user_id)
+
+    user_context[user_id]['agent'] = main
 
     user_context[user_id]['agents'] = {
-        'translator': AgentTranslator(tg, user_context[user_id], user_id),
+        'Main': main,        
+        'Translator': AgentTranslator(tg, user_context[user_id], user_id),
+        'Sessin Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
         #'reviewer': AgentReviewer(tg, user_id, user_context[user_id]),
-        #'session_planner': AgentSessionPlanner(tg, user_id, user_context[user_id]),
         #'teacher': AgentTeacher(tg, user_id, user_context[user_id]),
     }
 

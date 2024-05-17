@@ -4,7 +4,7 @@ from pprint import pprint
 
 class SimpleGPT:
 
-    def __init__(self, system, model = "gpt-3.5-turbo-0613", oai = None):
+    def __init__(self, system, model = "gpt-4o", oai = None):
         """
         Simple GPT client.
 

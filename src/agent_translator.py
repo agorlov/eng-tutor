@@ -1,5 +1,7 @@
 import logging
 from pprint import pprint
+from .simple_gpt import SimpleGPT
+from .state_switcher import StateSwitcher
 
 TRANSLATOR_INSTRUCTION = """
 # Your Role is Translator
@@ -19,35 +21,15 @@ In the answer must be only translated text.
 """
 
 class AgentTranslator:
-    def __init__(self, gpt):
-        self.gpt = gpt
-    
-    def process_user_message(self, message):
+    def __init__(self, tg, state, user_id):
+        self.tg = tg
+        self.user_id = user_id
+        self.state = state
+        
+    def run(self, message):
 
-        context = [
-            {
-                "role": "system", 
-                "content": TRANSLATOR_INSTRUCTION
-            },
-            {
-                "role": "user", 
-                "content": message
-            }
-        ]
+        gpt = SimpleGPT(system=TRANSLATOR_INSTRUCTION)
+        self.tg.send_message(self.user_id, gpt.chat(message))
 
-        response = self.gpt.chat.completions.create(
-            messages=context,
-            model="gpt-3.5-turbo-0613",
-        )
-
-        print("Translateor response: ")
-        print(response)
-        logging.info(response)
-
-        # Обработка вызовов функций из ответа 
-        respmsg = response.choices[0].message.content
-
-        logging.info(f"Translated: {respmsg}")
-
-        return respmsg
+        StateSwitcher(self.state).switch("Main", "")
 
