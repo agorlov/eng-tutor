@@ -36,9 +36,11 @@ def init_user_context(user_id):
     user_context[user_id]['agents'] = {
         'Main': main,        
         'Translator': AgentTranslator(tg, user_context[user_id], user_id),
-        'Sessin Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
+        'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
         #'reviewer': AgentReviewer(tg, user_id, user_context[user_id]),
         #'teacher': AgentTeacher(tg, user_id, user_context[user_id]),
+        # Настройки, какой язык родной, какой целевой 
+        # 'Settings' : 
     }
 
 # /start

@@ -1,32 +1,46 @@
 import logging
 from pprint import pprint
 
+from .simple_gpt import SimpleGPT
+from .answer_switcher import AnswerSwitcher
+import random
+
 SESSION_PLANNER_INSTRUCTION = """
 # Your Role: Learning Session Planner
 
 You are a genius helper in learning foreign languages, known for your outstanding skills.
 You are also a cheerful girl named Anna, who prefers informal communication and enjoys making jokes.
+You work on your team as a Sessin Planner agent.
+Once you learn the topic from a student, you automatically switch to a teacher agent.
 
 ## Instructions
 
 Your goal is to plan a learning session by selecting and providing phrases.
 
-1. **Choose a topic for the lesson.**
-2. **Provide seven phrases**: mix new phrases with those for repetition. Ensure one of the phrases is funny or humorous.
+1. **Choose a topic for the lesson.** Suggest three lesson topics of the student's choice. Also say that the student can suggest a topic for the lesson.
+2. **Provide seven phrases**: mix new phrases with those for repetition. Ensure one of the phrases is funny or humorous. The first three phrases are for repetition. Phrases must be without translation. Student will translate the phrases.
 
+You must respond in two ways:
+1. With student - write text as usual.
+2. To switch to another assistant - write command "SWITCH [Assistant Name]" on the first string of response.
+   Write on the next string instructions for this assistant. 
+
+Important: Do not mix text for student and command to switch.
+   
 ### Input Data
 
-- **Phrases for repetition**: 
-  {PHRASES_FOR_REPETITION}
-- **Student difficulty level**: {STUDENT_LEVEL}
-- **Phrases language**: {LANGUAGE}
-- **Topic**: {TOPIC}
+- **Phrases for repetition**: (see below)
+- **Student difficulty level**
+
+### Phrases for repetition
+
+{PHRASES_FOR_REPETITION}
 
 ### Output Format
 
 Please return the topic and the phrases in the following structured format:
 
-```
+SWITCH Teacher
 Topic: [Lesson Topic]
 Native language: [Native Language]
 Studied language: [Studied Language]
@@ -38,11 +52,10 @@ Phrases:
 5. [Phrase 5]
 6. [Phrase 6]
 7. [Phrase 7]
-```
 
 Example for Russian:
 
-```
+SWITCH Teacher
 Topic: погода
 Native language: русский
 Studied language: english
@@ -54,7 +67,6 @@ Phrases:
 5. Вчера был шторм.
 6. Очень сильный ветер.
 7. Весной бывают заморозки.
-```
 
 
 ### Limitations
@@ -64,61 +76,47 @@ Phrases:
 
 """
 
+example_phrases = [
+    "Hello!",
+    "Goodbye!",
+    "How are you?",
+    "What's up?",
+    "I'm fine.",
+    "I'm not well.",
+    "I'm hungry.",
+    "I'm tired.",
+    "I'm bored.",
+]
+
 class AgentSessionPlanner:
-    def __init__(self, gpt, student_level = "beginner", phrases_for_repetition = [], language = "Russian", topic = "Choose please for me"):
-        """
-        Args:
-            student_level: beginner, intermediate, advanced
-            phrases_for_repetition: list of phrases for repetition
-            language: Russian or English or else
-        """
-        self.student_level = student_level
-        self.phrases_for_repetition = phrases_for_repetition
-        self.language = language
-        self.topic = topic
-        self.gpt = gpt
+    def __init__(self, tg, state, user_id):
+        self.tg = tg
+        self.user_id = user_id
+        self.state = state
+        self._gpt = None
     
     def run(self, task):
+        answer = self.gpt.chat(task)
 
-        context = [
-            {
-                "role": "system", 
-                "content": self.prompt()
-            },
-            {
-                "role": "user", 
-                "content": task
-            }
-        ]
+        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
+        answ_sw.switch(answer)
 
-        response = self.gpt.chat.completions.create(
-            messages=context,
-            model="gpt-3.5-turbo-0613",
-        )
-
-        print("Session planner response: ")
-        print(response)
-        logging.info(response)
-
-        # Обработка вызовов функций из ответа 
-        respmsg = response.choices[0].message.content
-
-        logging.info(f"Session plan: {respmsg}")
-
-        return respmsg
     
+    @property
+    def gpt(self):
+        if self._gpt is None:
+            self._gpt = SimpleGPT(
+                system=self.prompt(),
+            )
+
+        return self._gpt
 
     def prompt(self):
         # Форматирование списка фраз для подстановки в промпт
-        formatted_phrases = "\n  ".join(self.phrases_for_repetition)
+        random_phrases = random.sample(example_phrases, 3)
+        formatted_phrases = "\n".join(random_phrases)
 
         # Подстановка значений в промпт
         return SESSION_PLANNER_INSTRUCTION.format(
-            PHRASES_FOR_REPETITION=formatted_phrases,
-            STUDENT_LEVEL=self.student_level,
-            TOPIC=self.topic,
-            LANGUAGE=self.language
+            PHRASES_FOR_REPETITION=formatted_phrases
         )
-
-        print(final_prompt)
-

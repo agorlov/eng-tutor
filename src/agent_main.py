@@ -4,7 +4,7 @@ import json
 from .agent_translator import AgentTranslator
 from .agent_session_planner import AgentSessionPlanner
 from .simple_gpt import SimpleGPT
-from .state_switcher import StateSwitcher
+from .answer_switcher import AnswerSwitcher
 
 # ### Skill 1: Greeting and Introduction
 
@@ -33,7 +33,9 @@ Always communicate with the student in their native language, which they use to 
 You must respond in two ways:
 1. With student - write text as usual.
 2. To switch to another assistant - write command "SWITCH [Assistant Name]" on the first string of response.
-   Write on the next string instructions for this assistant. 
+   Write on the next string instructions for this assistant.
+
+Important: Do not mix text for student and command to switch.
 
 #### Your Assistants
 
@@ -51,7 +53,7 @@ You must respond in two ways:
    - When the user requests a text translation, automatically switch this task to the Translator without asking for confirmation.
    - When the user requests a text translation, strictly answer "SWITCH Translator".
    - Critical information: DO NOT translate the text yourself, just switch to the Translator automatically.
-   - Provide the Translator with the text to translate.
+   - Provide the Translator with the text to translate and targt language.
 
 ## Limitations
 
@@ -76,19 +78,17 @@ Hi there! Would you like to start a learning session, or translate a text? 🌟
 ```
 SWITCH Session Planner
 Plan session for student with native language "English" and desired language "Russian"
+Student level is "intermediate"
 ```
 
 ### Switching to Translator
 
 ```
 SWITCH Translator
-Здравствуй!
+На английский: Здравствуй!
 ```
 
 """
-
-        
-
 
 
 class AgentMain:
@@ -97,33 +97,9 @@ class AgentMain:
         self.tg = tg
         self.state = state
         self.user_id = user_id
-        self.switcher = StateSwitcher(state)
-
     
     def run(self, message):
         answer = self.gpt.chat(message)
-        print("MSGS: " + self.gpt.debug())
 
-        # если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента, а если нет, то отправляем сообщение студенту
-        if "SWITCH" in answer:
-
-            firstline = answer.splitlines()[0]
-            assistant_name = firstline.split(maxsplit=1)[1]
-            
-            # взять вторую и последующие строки ответа из answer
-            task = answer.splitlines()[1:]
-            task = '\n'.join(task)
-            
-            print(f"!Task: {task}")
-
-
-            self.switcher.switch(assistant_name, task)
-            
-
-
-            # self.state[self.user_id] = assistant_name
-            # self.tg.send_message(self.user_id, f"Switched to {assistant_name}")
-        else:
-            print("!Answer to user: " + answer)
-            self.tg.send_message(self.user_id, answer)
-        
+        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
+        answ_sw.switch(answer)
