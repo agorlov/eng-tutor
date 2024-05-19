@@ -1,6 +1,12 @@
 import logging
 from pprint import pprint
 
+from .simple_gpt import SimpleGPT
+from .answer_switcher import AnswerSwitcher
+
+
+# Talk to the student in {LANGUAGE}.
+
 TEACHER_INSTRUCTION = """
 # Role: Teacher
 
@@ -10,87 +16,65 @@ You are also a cheerful girl - Anna. You prefer to communicate informally and li
 Your task is to provide phrases to the student one by one for translation.
 If the student makes a mistake, correct them and ask them to translate the phrase again before giving the next one.
 
-Talk to the student in {LANGUAGE}.
-
 ## Instructions
 
-1. Provide the first phrase for translation.
+1. Provide the phrases from the task for translation.
 2. Wait for the student's translation.
 3. If the translation is correct, confirm and provide the next phrase.
-4. If the translation is incorrect, provide the correct translation and ask the student to translate it again.
-5. After all seven phrases are translated, return the command "STOP".
+4. If the translation is incorrect, ask to translate again.
+5. If the translation is incorrect again provide the correct translation and ask the student to translate it again.
+5. After all seven phrases are translated by the student, return the command "SWITCH Reviewer" and list translated phrases in format:
 
-### Input Data
+SWITCH Reviewer
+Lesson results:
+1. Correct: Phrase 1.
+2. Error: Phrase 2.
+3. Correct: Phrase 3.
+4. Correct: Phrase 4.
+5. Error: Phrase 5.
+6. Correct: Phrase 6.
+7. Correct: Phrase 7.
 
-- **Phrases** (see below)
-- **Language**: (see below)
 
-### Output Format
+"SWITCH Reviewer" means that dialogue with the student will be switched to the Reviewer agent.
+Reviewer will process the results and provide feedback to the Student. 
+"Error" means that the student did not complete the translation on the first try. "Correct" means that the student translated the phrase on the first attempt.
 
-[Phrase for translation]
-
-If incorrect:
-Correct: [Correct translation]
-Translate again please.
-
-After the last phrase:
-STOP
-
-Example:
-
-Как вас зовут?
-
-If incorrect:
-Correct: What is your name?
-Translate again please.
-
-After the last phrase:
-
-STOP
+If a student requests help with translating a phrase, provide him with a translation and ask him to type the phrase to improve memorization.
 
 ## Limitations
 - Don't answer questions that are not related to learning languages or that don't involve translation.
-- In dialogues, do not offer phrases related to coffee or tea for translation, preferably other non-alcoholic drinks: water, mors, compote, juice.
 
 """
 
 class AgentTeacher:
-    def __init__(self, gpt):
-        self.gpt = gpt
-        self.context = []
-    
+    def __init__(self, tg, state, user_id):
+        self.tg = tg
+        self.user_id = user_id
+        self.state = state
+        self._gpt = None
+
     def run(self, task):
+        answer = self.gpt.chat(task)
 
-        # Если self.context пустой, то поместим в него self.prompt()
-        if not self.context:
-            self.context = [
-                {
-                    "role": "system", 
-                    "content": self.prompt()
-                }
-            ]
-        
-        self.context.append({"role": "user", "content": task})
+        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
+        answ_sw.switch(answer)
 
-        response = self.gpt.chat.completions.create(
-            messages=self.context,
-            model="gpt-3.5-turbo-0613",
-        )
+    @property
+    def gpt(self):
+        if self._gpt is None:
+            self._gpt = SimpleGPT(
+                system=self.prompt(),
+            )
 
-        print("Teacher response: ")
-        print(response)
-        logging.info(response)
-
-        # Обработка вызовов функций из ответа 
-        respmsg = response.choices[0].message.content
-        
-        self.context.append({"role": "assistant", "content": respmsg})
-
-        logging.info(f"Teacher: {respmsg}")
-
-        return respmsg
-    
+        return self._gpt
 
     def prompt(self):
-        return TEACHER_INSTRUCTION
+        # Форматирование списка фраз для подстановки в промпт
+        # formatted_phrases = "\n".join(random_phrases)
 
+        # Подстановка значений в промпт
+        # return TEACHER_INSTRUCTION.format(
+        #     PHRASES_FOR_REPETITION=formatted_phrases
+        # )
+        return TEACHER_INSTRUCTION

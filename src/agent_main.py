@@ -78,8 +78,11 @@ Hi there! Would you like to start a learning session, or translate a text? 🌟
 ```
 SWITCH Session Planner
 Plan session for student with native language "English" and desired language "Russian"
-Student level is "intermediate"
+Student level is "intermediate", talk to student in his native language: Russian
 ```
+
+In this case we know the student's native language and the language they want to learn.
+
 
 ### Switching to Translator
 

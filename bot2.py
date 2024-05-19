@@ -7,6 +7,7 @@ import telebot
 from src.agent_main import AgentMain
 from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
+from src.agent_teacher import AgentTeacher
 
 
 # Настроим логирование
@@ -37,8 +38,8 @@ def init_user_context(user_id):
         'Main': main,        
         'Translator': AgentTranslator(tg, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
-        #'reviewer': AgentReviewer(tg, user_id, user_context[user_id]),
-        #'teacher': AgentTeacher(tg, user_id, user_context[user_id]),
+        'Teacher': AgentTeacher(tg, user_context[user_id], user_id),
+        #'reviewer': AgentReviewer(tg, user_id, user_context[user_id]),        
         # Настройки, какой язык родной, какой целевой 
         # 'Settings' : 
     }
