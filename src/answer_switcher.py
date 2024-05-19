@@ -19,6 +19,11 @@ class AnswerSwitcher:
 
         user_message, switch_message  = self.split_message(answer)
 
+        # print("!answer: " + answer)
+        # print("!user_message: " + user_message)
+        # print("!switch: " + user_message)
+
+
         if user_message:
             print("!Answer to user: " + answer)
             self.tg.send_message(self.user_id, answer)
@@ -64,7 +69,9 @@ class AnswerSwitcher:
         if "SWITCH" in str:
             parts = str.split("SWITCH", 1)
             user_message = parts[0].strip()
-            switch_message = "SWITCH" + parts[1].strip()
+            if user_message == '':
+                user_message = None
+            switch_message = "SWITCH " + parts[1].strip()
         else:
             user_message = str.strip()
 

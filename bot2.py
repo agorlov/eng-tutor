@@ -1,4 +1,5 @@
 import logging
+from traceback_with_variables import print_exc
 
 from config import TG_BOT_TOKEN
 from src.system_prompt_ru import GREETING
@@ -61,4 +62,9 @@ def respond(message):
     agent.run(message.text)
 
 
-tg.polling(none_stop=True)
+try:
+    tg.polling(none_stop=True)
+
+except Exception as e:
+    print_exc()
+    exit(1)
