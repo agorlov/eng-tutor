@@ -2,10 +2,11 @@ from pprint import pprint
 
 class StateSwitcher:
 
-    def __init__(self, state):
+    def __init__(self, state: dict):
         self.state = state
 
     def switch(self, assistant_name, message):
+        assistant_name = assistant_name.strip()
         pprint(self.state)
         print(f"!Assistant: '{assistant_name}'")
         if assistant_name not in self.state['agents']:
@@ -14,8 +15,7 @@ class StateSwitcher:
 
         print("!StateSwitcher: Switching to " + assistant_name)
 
-        if not message:
-            return
-        
         self.state['agent'] = self.state['agents'][assistant_name]
-        self.state['agent'].run(message)
+
+        if message:
+            self.state['agent'].run(message)

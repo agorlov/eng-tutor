@@ -5,7 +5,7 @@ class AnswerSwitcher:
     Переключенный агент, в зависимости от ответа от агента
     """
 
-    def __init__(self, state, tg, user_id):
+    def __init__(self, state: dict, tg, user_id):
         self.state = state
         self.tg = tg
         self.switcher = StateSwitcher(state)
@@ -25,8 +25,8 @@ class AnswerSwitcher:
 
 
         if user_message:
-            print("!Answer to user: " + answer)
-            self.tg.send_message(self.user_id, answer)
+            print("!Answer to user: " + user_message)
+            self.tg.send_message(self.user_id, user_message)
         
         if switch_message:
             firstline = switch_message.splitlines()[0]

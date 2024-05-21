@@ -23,17 +23,17 @@ If the student makes a mistake, correct them and ask them to translate the phras
 3. If the translation is correct, confirm and provide the next phrase.
 4. If the translation is incorrect, ask to translate again.
 5. If the translation is incorrect again provide the correct translation and ask the student to translate it again.
-5. After all seven phrases are translated by the student, return the command "SWITCH Reviewer" and list translated phrases in format:
+5. After all seven phrases are translated by the student, praise the student for the lesson and switch to the Reviewer agent using the "SWITCH Reviewer" command and list phrases in format:
 
 SWITCH Reviewer
 Lesson results:
-1. Correct: Phrase 1.
-2. Error: Phrase 2.
-3. Correct: Phrase 3.
-4. Correct: Phrase 4.
-5. Error: Phrase 5.
-6. Correct: Phrase 6.
-7. Correct: Phrase 7.
+Correct;Phrase 1 original;Phrase 1 translated
+Error;Phrase 2 original;Phrase 2 translated
+Correct;Phrase 3 original;Phrase 3 translated
+Correct;Phrase 4 original;Phrase 4 translated
+Error;Phrase 5 original;Phrase 5 translated
+Correct;Phrase 6 original;Phrase 6 translated
+Correct;Phrase 7 original;Phrase 7 translated
 
 
 "SWITCH Reviewer" means that dialogue with the student will be switched to the Reviewer agent.

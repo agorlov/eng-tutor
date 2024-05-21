@@ -9,6 +9,7 @@ from src.agent_main import AgentMain
 from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
+from src.agent_reviewer import AgentReviewer
 
 
 # Настроим логирование
@@ -40,7 +41,7 @@ def init_user_context(user_id):
         'Translator': AgentTranslator(tg, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
         'Teacher': AgentTeacher(tg, user_context[user_id], user_id),
-        #'reviewer': AgentReviewer(tg, user_id, user_context[user_id]),        
+        'Reviewer': AgentReviewer(tg, user_context[user_id], user_id),
         # Настройки, какой язык родной, какой целевой 
         # 'Settings' : 
     }
@@ -62,9 +63,11 @@ def respond(message):
     agent.run(message.text)
 
 
-try:
-    tg.polling(none_stop=True)
 
-except Exception as e:
-    print_exc()
-    exit(1)
+tg.polling(none_stop=True)
+
+# try:
+#     tg.polling(none_stop=True)
+# except Exception as e:
+#     print_exc()
+#     exit(1)
