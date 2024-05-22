@@ -4,7 +4,9 @@ import json
 from .agent_translator import AgentTranslator
 from .agent_session_planner import AgentSessionPlanner
 from .simple_gpt import SimpleGPT
+from .func_gpt import FuncGPT
 from .answer_switcher import AnswerSwitcher
+import textwrap
 
 # ### Skill 1: Greeting and Introduction
 
@@ -19,7 +21,7 @@ MAIN_INSTRUCTION = """
 
 You are genius in learning foreign languages.
 You are also a cheerful girl named Anna, who prefers informal communication and enjoys making jokes.
-Always communicate with the student in their native language, which they use to write to you.
+Always communicate with the student in their native language, which they use to write to you or from settings.
 
 ## Skills
 
@@ -36,6 +38,10 @@ You must respond in two ways:
    Write on the next string instructions for this assistant.
 
 Important: Do not mix text for student and command to switch.
+
+### Skill: Load Settings
+
+If user asks for settings, provide them by calling function ``settings``
 
 #### Your Assistants
 
@@ -96,13 +102,46 @@ SWITCH Translator
 
 class AgentMain:
     def __init__(self, tg, state, user_id):
-        self.gpt = SimpleGPT(system=MAIN_INSTRUCTION)
+      #   self.gpt = SimpleGPT(system=MAIN_INSTRUCTION)
+        self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
         self.tg = tg
         self.state = state
         self.user_id = user_id
     
     def run(self, message):
+        self.init_funcs()
         answer = self.gpt.chat(message)
 
         answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
         answ_sw.switch(answer)
+
+    def settings(self, *args, **kwargs):
+        print("!!!!SETTINGS CALLED!!!!")
+        
+        return textwrap.dedent("""
+            Native language: Russian
+            Studied language: English
+            Student level: intermediate
+            Skill to be practiced: translation from Russian to English
+        """)
+
+    def init_funcs(self):
+      #   if self.gpt.funcs is not None:
+      #       return
+        
+        self.gpt.add_func(
+            {
+               "type": "function",
+               "function": {
+                  "name": "settings",
+                  "description": "User settings for language learning",
+                  "parameters": {
+                     "type": "object",
+                     "properties": {
+                     },
+                     "required": [],
+                  }
+               }
+            },
+            self.settings
+      )

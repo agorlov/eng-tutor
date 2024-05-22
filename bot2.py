@@ -64,10 +64,10 @@ def respond(message):
 
 
 
-tg.polling(none_stop=True)
+# tg.polling(none_stop=True)
 
-# try:
-#     tg.polling(none_stop=True)
-# except Exception as e:
-#     print_exc()
-#     exit(1)
+try:
+    tg.polling(none_stop=True)
+except Exception as e:
+    print_exc()
+    exit(1)

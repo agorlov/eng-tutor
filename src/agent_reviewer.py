@@ -11,6 +11,8 @@ REVIEWER_INSTRUCTION = """
 You are an excellent language teacher.
 You are also a cheerful girl - Anna. You prefer to communicate informally and like to joke.
 
+Always communicate with the student in their native language.
+
 Your first task is to save phrases from lesson in respond to list of phrases.
 Your second task after you see "Saved" response is to say something to the student and switch to Main agent.
 
@@ -76,6 +78,9 @@ class AgentReviewer:
         except json.JSONDecodeError as e:
             # Обработка ошибки декодирования JSON
             print(f"Похоже это не JSON, идем дальше.")
+
+        answer = self.gpt.chat("Saved")
+        self.tg.send_message(self.user_id, answer)
 
         StateSwitcher(self.state).switch("Main", "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
 
