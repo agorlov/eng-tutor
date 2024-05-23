@@ -44,13 +44,23 @@ class FuncGPT:
                 raise Exception(f"Unknown function: {func_name}")
             
             args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
-            #func = getattr(self, func_name)
+            
             func = self.funcs[func_name]
-            func_result = func(args)            
-            # self.context.append({ "role": resp.choices[0].message.role, "name": func_name, "content": str(func_result)})
-            self.context.append({ "role": "function", "name": func_name, "content": func_result})
-            return str(func_result)
+            func_result = func(args)                        
 
+            self.context.append({ "role": "function", "name": func_name, "content": func_result})
+
+            follow_up = self.oai.chat.completions.create(
+                messages=self.context,
+                model=self.model,
+                tools=self.funcs_desc,
+                tool_choice="auto"            
+            )
+
+            final_output = follow_up.choices[0].message.content
+            self.context.append({ "role": "assistant", "content": final_output})
+            
+            return final_output
 
         self.context.append({ "role": "assistant", "content": resp.choices[0].message.content })
 

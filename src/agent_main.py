@@ -7,6 +7,7 @@ from .simple_gpt import SimpleGPT
 from .func_gpt import FuncGPT
 from .answer_switcher import AnswerSwitcher
 import textwrap
+import os
 
 # ### Skill 1: Greeting and Introduction
 
@@ -14,6 +15,9 @@ import textwrap
 
 # - **Learning Session:** Propose starting a learning session.
 # - **Text Translation:** Offer to translate any text they provide.
+
+# If you don't know the settings, ask the user. And then save the settings by calling SWITCH Save Settings.
+# Skill to be practiced: translation from Russian to English
 
 
 MAIN_INSTRUCTION = """
@@ -28,6 +32,10 @@ Always communicate with the student in their native language, which they use to 
 ### Skill: Learning Facilitation
 
 Твоя задача поприветствовать пользователя и предложить позаниматься или переводить текст.
+Перед началом урока убедись, что тебе известны настройки пользователя. Какой язык для него родной, он обычно на нем пишет,
+какой язык он хочет учить, какой у него уровень владения языком.
+
+Если настройки пользователя не известны, то можно заниматься или переводить:
 
 Как только пользователь скажет, что хочет начать урок - передай диалог с помощью команды SWITCH Session Planner.
 Как только пользователь скажет, что хочет перевести - передай диалог с помощью команды SWITCH Translator.
@@ -39,9 +47,15 @@ You must respond in two ways:
 
 Important: Do not mix text for student and command to switch.
 
-### Skill: Load Settings
+### Skill: User Settings
 
-If user asks for settings, provide them by calling function ``settings``
+User settings looks like this:
+   Native language: Russian
+   Studied language: English
+   Student level: intermediate
+   
+
+If you don't know the settings, ask the user. And then save the settings by calling function ``save_settigns``.
 
 #### Your Assistants
 
@@ -102,46 +116,76 @@ SWITCH Translator
 
 class AgentMain:
     def __init__(self, tg, state, user_id):
-      #   self.gpt = SimpleGPT(system=MAIN_INSTRUCTION)
-        self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
+        self.gpt = None # FuncGPT(system=MAIN_INSTRUCTION)
         self.tg = tg
         self.state = state
         self.user_id = user_id
     
     def run(self, message):
-        self.init_funcs()
+        if self.gpt is None:
+            self.init_gpt()
+
         answer = self.gpt.chat(message)
 
         answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
         answ_sw.switch(answer)
 
-    def settings(self, *args, **kwargs):
-        print("!!!!SETTINGS CALLED!!!!")
-        
-        return textwrap.dedent("""
-            Native language: Russian
-            Studied language: English
-            Student level: intermediate
-            Skill to be practiced: translation from Russian to English
-        """)
+    def save_settings(self, *args, **kwargs):
+        print("!!!!SAVE SETTINGS CALLED!!!!")
+        print(args[0]['settings'])
 
-    def init_funcs(self):
-      #   if self.gpt.funcs is not None:
-      #       return
+        # Формируем путь к файлу настроек пользователя
+        file_path = f'data/settings/{user_id}.txt'
+         
+        # Сохраняем строку настроек в файл
+        with open(file_path, 'w') as file:
+           file.write(args[0]['settings'])
+    
+        print(f"!Настройки пользователя {user_id} сохранены в файле {file_path}")        
+
+
+    def settings(self, user_id):
+         """
+         Reads the contents of a settings file for a given user ID.
+
+         Args:
+            user_id: The user ID for whom to read settings.
+
+         Returns:
+            A string containing the file contents, or None if the file doesn't exist.
+         """
+
+         file_path = os.path.join("data", "settings", f"{user_id}.txt")
+
+         try:
+            with open(file_path, "r") as file:
+               contents = file.read()
+               return contents
+         except FileNotFoundError:
+            return ""
+
+
+    def init_gpt(self):
+        self.gpt = FuncGPT(system=MAIN_INSTRUCTION + "\n### User Settings\n\n" + self.settings(self.user_id))
+
         
         self.gpt.add_func(
             {
                "type": "function",
                "function": {
-                  "name": "settings",
-                  "description": "User settings for language learning",
+                  "name": "save_settings",
+                  "description": "Save user settings for language learning",
                   "parameters": {
                      "type": "object",
                      "properties": {
+                           "settings": {
+                              "type": "string",
+                              "description": "Settings for language learning, as 4 strings: Native language, Studied language, Student level",
+                           },
                      },
-                     "required": [],
+                     "required": [ "settings" ],
                   }
                }
             },
-            self.settings
+            self.save_settings
       )
