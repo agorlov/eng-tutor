@@ -2,7 +2,6 @@ import logging
 from traceback_with_variables import print_exc
 
 from config import TG_BOT_TOKEN
-from src.system_prompt_ru import GREETING
 
 import telebot
 from src.agent_main import AgentMain
@@ -32,24 +31,30 @@ def init_user_context(user_id):
         'agents': {}
     }
 
-    main = AgentMain(tg, user_context[user_id], user_id)
-
-    user_context[user_id]['agent'] = main
-
     user_context[user_id]['agents'] = {
-        'Main': main,        
+        'Main': AgentMain(tg, user_context[user_id], user_id),
         'Translator': AgentTranslator(tg, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
         'Teacher': AgentTeacher(tg, user_context[user_id], user_id),
         'Reviewer': AgentReviewer(tg, user_context[user_id], user_id),
-        # Настройки, какой язык родной, какой целевой 
-        # 'Settings' : 
     }
+
+    # Начинаем с агента Main
+    user_context[user_id]['agent'] = user_context[user_id]['agents']['Main']
 
 # /start
 @tg.message_handler(commands=['start'])
 def start(message):
-    tg.send_message(message.chat.id, GREETING)
+    tg.send_message(message.chat.id, """
+🎉 Привет! Меня зовут Анна. 🌟
+
+Я тут, чтобы помочь тебе освоить английский без скуки! 😊
+
+Вот как это будет работать:
+1. Я буду предлагать фразы, а ты - переводить их и запоминать, это как игра, которая научит тебя формулировать мысли на английском!
+2. Если хочешь, можешь предложить свою тему для разговора, и я с удовольствием поддержу. 📚
+3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
+    """)
 
 
 @tg.message_handler(func=lambda message: True)
@@ -62,9 +67,6 @@ def respond(message):
     agent = user_context[user_id]['agent']
     agent.run(message.text)
 
-
-
-# tg.polling(none_stop=True)
 
 try:
     tg.polling(none_stop=True)

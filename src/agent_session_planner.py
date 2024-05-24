@@ -38,6 +38,8 @@ Your goal is to plan a learning session by selecting and providing phrases.
 ### Output Format
 
 Please return the topic and the phrases in the following structured format:
+{TRANSLATE_DIRECTION}
+
 
 SWITCH Teacher
 Topic: [Lesson Topic]
@@ -115,7 +117,15 @@ class AgentSessionPlanner:
         random_phrases = random.sample(example_phrases, 3)
         formatted_phrases = "\n".join(random_phrases)
 
+        # Случайный вариант направления перевода
+        direction = [
+            "Предлагай фразы на родном языке пользователя для перевода на иностранный.",
+            "Предлагай фразы на иностранном языке для перевода на родной язык пользователя."
+        ]
+
+
         # Подстановка значений в промпт
         return SESSION_PLANNER_INSTRUCTION.format(
-            PHRASES_FOR_REPETITION=formatted_phrases
+            PHRASES_FOR_REPETITION=formatted_phrases,
+            TRANSLATE_DIRECTION=random.choice(direction)
         )

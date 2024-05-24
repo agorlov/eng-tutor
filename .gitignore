@@ -4,4 +4,5 @@ voice*.ogg
 tmp/
 *.bin
 app.log
+data/settings/
  

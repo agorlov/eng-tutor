@@ -46,7 +46,7 @@ class FuncGPT:
             args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
             
             func = self.funcs[func_name]
-            func_result = func(args)                        
+            func_result = func(args)
 
             self.context.append({ "role": "function", "name": func_name, "content": func_result})
 

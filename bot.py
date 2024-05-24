@@ -1,3 +1,5 @@
+# Deprecated. Use bot2.py instead
+
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from openai import OpenAI

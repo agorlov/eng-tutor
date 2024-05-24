@@ -135,13 +135,15 @@ class AgentMain:
         print(args[0]['settings'])
 
         # Формируем путь к файлу настроек пользователя
-        file_path = f'data/settings/{user_id}.txt'
+        file_path = f'data/settings/{self.user_id}.txt'
          
         # Сохраняем строку настроек в файл
         with open(file_path, 'w') as file:
            file.write(args[0]['settings'])
     
-        print(f"!Настройки пользователя {user_id} сохранены в файле {file_path}")        
+        print(f"!Настройки пользователя {self.user_id} сохранены в файле {file_path}")
+
+        return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
 
     def settings(self, user_id):
@@ -155,6 +157,8 @@ class AgentMain:
             A string containing the file contents, or None if the file doesn't exist.
          """
 
+         print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
+
          file_path = os.path.join("data", "settings", f"{user_id}.txt")
 
          try:
@@ -166,7 +170,11 @@ class AgentMain:
 
 
     def init_gpt(self):
-        self.gpt = FuncGPT(system=MAIN_INSTRUCTION + "\n### User Settings\n\n" + self.settings(self.user_id))
+        self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
+        self.gpt.context.append({
+            "role": "user",
+            "content": "My preferences:\n" + self.settings(self.user_id)
+        })
 
         
         self.gpt.add_func(
