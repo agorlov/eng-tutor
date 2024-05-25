@@ -4,7 +4,7 @@ import json
 
 from .simple_gpt import SimpleGPT
 from .state_switcher import StateSwitcher
-from .PhrasesSaved import PhrasesSaved
+from .phrases_saved import PhrasesSaved
 
 ARCHIVER_INSTRUCTION = """
 # Role: Archiver

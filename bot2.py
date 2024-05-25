@@ -46,16 +46,31 @@ def init_user_context(user_id):
 # /start
 @tg.message_handler(commands=['start'])
 def start(message):
-    tg.send_message(message.chat.id, """
+    user_language = message.from_user.language_code    
+    print(f"!User Language: {user_language}")
+
+    if user_language == 'ru':
+        tg.send_message(message.chat.id, """
 🎉 Привет! Меня зовут Анна. 🌟
 
 Я тут, чтобы помочь тебе освоить английский без скуки! 😊
 
 Вот как это будет работать:
 1. Я буду предлагать фразы, а ты - переводить их и запоминать, это как игра, которая научит тебя формулировать мысли на английском!
-2. Если хочешь, можешь предложить свою тему для разговора, и я с удовольствием поддержу. 📚
+2. Если хочешь, можешь предложить свою тему для урока, и я с удовольствием поддержу. 📚
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
-    """)
+        """)
+    else:
+        tg.send_message(message.chat.id, """
+🎉 Hi! My name is Anna. 🌟
+
+I'm here to help you learn a foreign language without any boredom! 😊
+
+Here's how it will work:
+1. I will suggest phrases, and you will translate and memorize them. It's like a game that will teach you how to formulate thoughts in a foreign language!
+2. If you want, you can suggest your own topic for the lesson, and I will gladly support you. 📚
+3. Need a translation? Just write: "Translate: your phrase or text", and I’ll come to the rescue! 📖
+        """)
 
 
 @tg.message_handler(func=lambda message: True)

@@ -3,6 +3,7 @@ from pprint import pprint
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
+from .phrases_repetition import PhrasesRepetition
 import random
 
 SESSION_PLANNER_INSTRUCTION = """
@@ -77,18 +78,6 @@ Phrases:
 
 """
 
-example_phrases = [
-    "Hello!",
-    "Goodbye!",
-    "How are you?",
-    "What's up?",
-    "I'm fine.",
-    "I'm not well.",
-    "I'm hungry.",
-    "I'm tired.",
-    "I'm bored.",
-]
-
 class AgentSessionPlanner:
     def __init__(self, tg, state, user_id):
         self.tg = tg
@@ -113,16 +102,21 @@ class AgentSessionPlanner:
         return self._gpt
 
     def prompt(self):
+        repetition = PhrasesRepetition(
+            self.user_id,
+            native_lang=self.state['settings']['Native language'],
+            studied_lang=self.state['settings']['Studied language']
+        )
+
         # Форматирование списка фраз для подстановки в промпт
-        random_phrases = random.sample(example_phrases, 3)
-        formatted_phrases = "\n".join(random_phrases)
+        formatted_phrases = "\n".join(repetition.phrases())
+        print("!Formatted phrases: " + formatted_phrases)
 
         # Случайный вариант направления перевода
         direction = [
-            "Предлагай фразы на родном языке пользователя для перевода на иностранный.",
-            "Предлагай фразы на иностранном языке для перевода на родной язык пользователя."
+            "Suggest phrases in the user's native language for translation into the foreign language.",
+            "Suggest phrases in the foreign language for translation into the user's native language."
         ]
-
 
         # Подстановка значений в промпт
         return SESSION_PLANNER_INSTRUCTION.format(
