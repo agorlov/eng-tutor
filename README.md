@@ -1,4 +1,7 @@
 # Anna - a bot for learning English 
+
+!!!!! Pull request !!!!!
+
 ![python-version](https://img.shields.io/badge/python-3.10-blue.svg)
 [![openai-version](https://img.shields.io/badge/openai-0.27.8-orange.svg)](https://openai.com/)
 
