@@ -8,7 +8,7 @@ from src.agent_main import AgentMain
 from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
-from src.agent_reviewer import AgentReviewer
+from src.agent_archiver import AgentArchiver
 
 
 # Настроим логирование
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 tg = telebot.TeleBot(TG_BOT_TOKEN)
 
 # Словарь для хранения контекста
-# user_id: { 'agent' : AgentMain, main_context: [], agents: {} }
+# user_id: { 'agent' : AgentMain, main_context: [], agents: {}, settings: {} }
 # todo: переименовать в state
 user_context = {}
 
@@ -28,7 +28,8 @@ def init_user_context(user_id):
     user_context[user_id] = {
         'agent': None,
         'main_context': [],
-        'agents': {}
+        'agents': {},
+        'settings': {} # todo перенести код считывающий настройки из AgentMain (когда появится UserSettings)
     }
 
     user_context[user_id]['agents'] = {
@@ -36,7 +37,7 @@ def init_user_context(user_id):
         'Translator': AgentTranslator(tg, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
         'Teacher': AgentTeacher(tg, user_context[user_id], user_id),
-        'Reviewer': AgentReviewer(tg, user_context[user_id], user_id),
+        'Archiver': AgentArchiver(tg, user_context[user_id], user_id),
     }
 
     # Начинаем с агента Main

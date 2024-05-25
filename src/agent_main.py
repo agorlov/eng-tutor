@@ -115,13 +115,13 @@ SWITCH Translator
 
 
 class AgentMain:
-    def __init__(self, tg, state, user_id):
+   def __init__(self, tg, state, user_id):
         self.gpt = None # FuncGPT(system=MAIN_INSTRUCTION)
         self.tg = tg
         self.state = state
         self.user_id = user_id
     
-    def run(self, message):
+   def run(self, message):
         if self.gpt is None:
             self.init_gpt()
 
@@ -130,7 +130,7 @@ class AgentMain:
         answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
         answ_sw.switch(answer)
 
-    def save_settings(self, *args, **kwargs):
+   def save_settings(self, *args, **kwargs):
         print("!!!!SAVE SETTINGS CALLED!!!!")
         print(args[0]['settings'])
 
@@ -145,8 +145,7 @@ class AgentMain:
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
-
-    def settings(self, user_id):
+   def settings(self, user_id):
          """
          Reads the contents of a settings file for a given user ID.
 
@@ -169,13 +168,16 @@ class AgentMain:
             return ""
 
 
-    def init_gpt(self):
+   def init_gpt(self):
         self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
+        settigns = self.settings(self.user_id)
         self.gpt.context.append({
             "role": "user",
-            "content": "My preferences:\n" + self.settings(self.user_id)
+            "content": "My preferences:\n" + settigns
         })
 
+        # Сохраним настройки в self.state
+        self.state['settings'] = self.settings_as_dict(settigns)
         
         self.gpt.add_func(
             {
@@ -197,3 +199,16 @@ class AgentMain:
             },
             self.save_settings
       )
+        
+   def settings_as_dict(self, settings: str) -> dict:
+      result = {}
+
+      # Разбиваем текст на строки и обрабатываем каждую строку
+      for line in settings.strip().split('\n'):
+         # Разбиваем строку по символу ':'
+         key, value = line.split(':', 1)
+
+         # Удаляем лишние пробелы и добавляем в словарь
+         result[key.strip()] = value.strip()
+
+      return result

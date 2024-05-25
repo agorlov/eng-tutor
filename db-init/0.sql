@@ -9,9 +9,7 @@ CREATE TABLE phrases (
     total_repetitions INTEGER DEFAULT 0,
     success_repetitions INTEGER DEFAULT 0,
     first_repeat TIMESTAMP WITH TIME ZONE,
-    second_repeat TIMESTAMP WITH TIME ZONE,
-    third_repeat TIMESTAMP WITH TIME ZONE,
-    fourth_repeat TIMESTAMP WITH TIME ZONE
+    last_repeat TIMESTAMP WITH TIME ZONE
 );
 
 CREATE INDEX idx_phrases_user_id ON phrases (user_id);

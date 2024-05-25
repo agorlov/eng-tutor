@@ -4,20 +4,13 @@ import json
 
 from .simple_gpt import SimpleGPT
 from .state_switcher import StateSwitcher
+from .PhrasesSaved import PhrasesSaved
 
-REVIEWER_INSTRUCTION = """
-# Role: Reviewer
+ARCHIVER_INSTRUCTION = """
+# Role: Archiver
 
-You are an excellent language teacher.
-You are also a cheerful girl - Anna. You prefer to communicate informally and like to joke.
-
-Always communicate with the student in their native language.
-
-Your first task is to save phrases from lesson in respond to list of phrases.
-Your second task after you see "Saved" response is to say something to the student and switch to Main agent.
-
-
-To save phrases please  convert the phrases to json format. And respond by JSON-only.
+Your task is to save phrases from lesson in respond to list of phrases.
+To save phrases please convert them to json format. And respond by JSON-only.
 
 ## Instructions
 
@@ -36,27 +29,26 @@ In format of json:
 
 Put only json to the answer, because it will be saved in database and it will programmatically be processed.
 
-After that, when you see "Saved" message, now your respond will read your student. Say something about lesson results for the student and give the command "SWITCH Main", to switch to main agent.
-
-## Your Input (example)
+## Your Input, example
 
 Lesson results:
-1. Correct: Phrase 1.
-2. Error: Phrase 2.
-3. Correct: Phrase 3.
-4. Correct: Phrase 4.
-5. Error: Phrase 5.
-6. Correct: Phrase 6.
-7. Correct: Phrase 7.
+Correct;Phrase 1 original;Phrase 1 translated
+Error;Phrase 2 original;Phrase 2 translated
+Correct;Phrase 3 original;Phrase 3 translated
+Correct;Phrase 4 original;Phrase 4 translated
+Error;Phrase 5 original;Phrase 5 translated
+Correct;Phrase 6 original;Phrase 6 translated
+Correct;Phrase 7 original;Phrase 7 translated
 
-"SWITCH Main" means that dialogue with the student will be switched to the Main agent.
 
 ## Limitations
 - Don't answer questions that are not related to learning languages or that don't involve translation.
+- If Ok, answer only in json format.
+- In case of ERROR, answer like this template: ERROR: [Error message]
 
 """
 
-class AgentReviewer:
+class AgentArchiver:
     def __init__(self, tg, state, user_id):
         self.tg = tg
         self.user_id = user_id
@@ -71,16 +63,24 @@ class AgentReviewer:
         try:
             # Попытка декодирования JSON
             data = json.loads(answer)
-            
+
             # Обработка данных после успешного декодирования
             print("!Данные успешно декодированы, сохраняем их в базу данных")
-            print(data)
+            print(data)            
+
+            PhrasesSaved(
+                self.user_id,
+                self.state['settings']['Native language'],
+                self.state['settings']['Studied language'],
+            ).save_phrases(data)
+        
         except json.JSONDecodeError as e:
             # Обработка ошибки декодирования JSON
             print(f"Похоже это не JSON, идем дальше.")
-
-        answer = self.gpt.chat("Saved")
-        self.tg.send_message(self.user_id, answer)
+            self.tg.send_message(
+                self.user_id,
+                f"Не удалось сохранить повторенные фразы. Ответ агента Archiver: {answer}"
+            )
 
         StateSwitcher(self.state).switch("Main", "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
 
@@ -94,11 +94,4 @@ class AgentReviewer:
         return self._gpt
 
     def prompt(self):
-        # Форматирование списка фраз для подстановки в промпт
-        # formatted_phrases = "\n".join(random_phrases)
-
-        # Подстановка значений в промпт
-        # return TEACHER_INSTRUCTION.format(
-        #     PHRASES_FOR_REPETITION=formatted_phrases
-        # )
-        return REVIEWER_INSTRUCTION
+        return ARCHIVER_INSTRUCTION

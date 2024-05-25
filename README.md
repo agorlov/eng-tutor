@@ -20,10 +20,36 @@ Database (adminer tool): http://localhost:8082/
 
 
 ### Debuging
+
 For debugging purposes, there is a container `anna_debug` that you can use to run the bot.
 Simply enter the container and run `python bot.py`
 To avoid restarting the container every time, it's better to stop the `anna_bot` container while working in `anna_debug`
 
+
+### Unit tests
+
+Run tests:
+
+```
+python -m unittest discover -s tests/
+```
+
+### Debug classes
+
+To debug class without other stuff
+
+add section like this:
+```python
+if __name__ == '__main__':
+    phrases = [
+        {'phrase_orig': 'Phrase 1', 'phrase_translated': 'Phrase 1', 'correct': '1'}
+    ]
+
+    psaved = PhrasesSaved(user_id=1, native_lang='Russian', studied_lang='English')
+    psaved.save_phrases(phrases)
+```
+
+And run it: `python -m src.PhrasesSaved`
 
 ### DB Container
 
@@ -48,7 +74,7 @@ https://github.com/docker-library/docs/blob/master/postgres/README.md
 Бот Planner
 Бот Teacher
 Бот Translator
-Бот Reviewer
+Бот Archiver
 
 # Бот меню (узнать какой язык будем учить и предпочтения пользователя):
 
@@ -71,9 +97,9 @@ https://github.com/docker-library/docs/blob/master/postgres/README.md
 
 Тичер> SWITCH Reviewer (отдать весь диалог Тичера)
 
-# Бот Reviewer
+# Бот Archiver
 
-возвращает список повторенных фраз и сохраняет их в БД
+сохраняет список повторенных фраз в БД
 
 Reviewer> SWITCH Main
 ```
