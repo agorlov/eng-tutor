@@ -6,6 +6,7 @@ from .agent_session_planner import AgentSessionPlanner
 from .simple_gpt import SimpleGPT
 from .func_gpt import FuncGPT
 from .answer_switcher import AnswerSwitcher
+from .user_score import UserScore
 import textwrap
 import os
 
@@ -31,14 +32,12 @@ Always communicate with the student in their native language, which they use to 
 
 ### Skill: Learning Facilitation
 
-Твоя задача поприветствовать пользователя и предложить позаниматься или переводить текст.
-Перед началом урока убедись, что тебе известны настройки пользователя. Какой язык для него родной, он обычно на нем пишет,
-какой язык он хочет учить, какой у него уровень владения языком.
+Your task is to greet the user and offer to either practice or translate text. Before the lesson begins, make sure you know the user's settings. What is their native language, what language do they usually write in, what language they want to learn, and what is their proficiency level in that language.
 
-Если настройки пользователя не известны, то можно заниматься или переводить:
+If the user's settings are unknown, you can either practice or translate:
 
-Как только пользователь скажет, что хочет начать урок - передай диалог с помощью команды SWITCH Session Planner.
-Как только пользователь скажет, что хочет перевести - передай диалог с помощью команды SWITCH Translator.
+As soon as the user says they want to start a lesson, pass the dialogue using the SWITCH Session Planner command.
+As soon as the user says they want to translate, pass the dialogue using the SWITCH Translator command.
 
 You must respond in two ways:
 1. With student - write text as usual.
@@ -123,7 +122,10 @@ class AgentMain:
     
    def run(self, message):
         if self.gpt is None:
-            self.init_gpt()
+            self.init_gpt()            
+            self.show_stats()
+
+
 
         answer = self.gpt.chat(message)
 
@@ -188,6 +190,21 @@ class AgentMain:
 
          # Сохраним настройки в self.state
          self.state['settings'] = self.settings_as_dict(settigns)
+
+         self.tg.send_message(self.user_id, "Settings:\n" + settigns)
+
+   def show_stats(self):
+      stats = ""
+
+      statsdict = UserScore(self.user_id).stats()
+
+      for param in statsdict:
+         value = statsdict[param]
+         stats += f"{param}: {value}\n"
+
+      self.tg.send_message(self.user_id, stats)
+
+      return stats
 
 
    def init_gpt(self):

@@ -5,6 +5,7 @@ import json
 from .simple_gpt import SimpleGPT
 from .state_switcher import StateSwitcher
 from .phrases_saved import PhrasesSaved
+from .user_score import UserScore
 
 ARCHIVER_INSTRUCTION = """
 # Role: Archiver
@@ -53,6 +54,7 @@ class AgentArchiver:
         self.tg = tg
         self.user_id = user_id
         self.state = state
+        self.score = UserScore(user_id)
         self._gpt = None
 
     def run(self, task):
@@ -81,6 +83,19 @@ class AgentArchiver:
                 self.user_id,
                 f"Не удалось сохранить повторенные фразы. Ответ агента Archiver: {answer}"
             )
+
+        correct_count = 0
+        for phrase in data:
+            if phrase['correct']:
+                correct_count += 1                
+                
+        bonus = correct_count * 5
+        self.score.update_score(bonus)
+        total_bonuses = self.score.user_score()
+        self.tg.send_message(
+            self.user_id,
+            f"[{correct_count}/7] 👍 +{bonus} XP. Total XP: {total_bonuses}"
+        )
 
         StateSwitcher(self.state).switch("Main", "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
 

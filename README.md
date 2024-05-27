@@ -52,7 +52,7 @@ if __name__ == '__main__':
     psaved.save_phrases(phrases)
 ```
 
-And run it: `python -m src.PhrasesSaved`
+And run it: `python -m src.phrases_saved`
 
 ### DB Container
 
