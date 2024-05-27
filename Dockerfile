@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 # git+https://github.com/agorlov/whispercpp.py - wispercpp binding
-RUN pip install pyTelegramBotAPI psycopg2 python-dateutil faster-whisper openai
+RUN pip install pyTelegramBotAPI psycopg2 python-dateutil faster-whisper openai traceback_with_variables
 
 # Install cron
 RUN apt-get update && apt-get -y install cron
