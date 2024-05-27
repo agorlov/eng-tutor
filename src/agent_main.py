@@ -140,6 +140,8 @@ class AgentMain:
         # Сохраняем строку настроек в файл
         with open(file_path, 'w') as file:
            file.write(args[0]['settings'])
+
+        self.init_settings()
     
         print(f"!Настройки пользователя {self.user_id} сохранены в файле {file_path}")
 
@@ -165,39 +167,53 @@ class AgentMain:
                contents = file.read()
                return contents
          except FileNotFoundError:
+            print(f"!!!!Settings for user {user_id} not found!!!!")
             return ""
+
+   def init_settings(self):
+      """
+      Initializes the user settings for a given user ID.
+
+      1. Put them to current context as user message
+      2. Put them to user state as `setting`
+
+      """
+      settigns = self.settings(self.user_id)
+
+      if settigns != "":
+         self.gpt.context.append({
+               "role": "user",
+               "content": "My preferences:\n" + settigns
+         })
+
+         # Сохраним настройки в self.state
+         self.state['settings'] = self.settings_as_dict(settigns)
 
 
    def init_gpt(self):
-        self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
-        settigns = self.settings(self.user_id)
-        self.gpt.context.append({
-            "role": "user",
-            "content": "My preferences:\n" + settigns
-        })
+      self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
 
-        # Сохраним настройки в self.state
-        self.state['settings'] = self.settings_as_dict(settigns)
+      self.init_settings()
         
-        self.gpt.add_func(
-            {
-               "type": "function",
-               "function": {
-                  "name": "save_settings",
-                  "description": "Save user settings for language learning",
-                  "parameters": {
-                     "type": "object",
-                     "properties": {
-                           "settings": {
-                              "type": "string",
-                              "description": "Settings for language learning, as 4 strings: Native language, Studied language, Student level",
-                           },
-                     },
-                     "required": [ "settings" ],
-                  }
-               }
-            },
-            self.save_settings
+      self.gpt.add_func(
+          {
+             "type": "function",
+             "function": {
+                "name": "save_settings",
+                "description": "Save user settings for language learning",
+                "parameters": {
+                   "type": "object",
+                   "properties": {
+                         "settings": {
+                            "type": "string",
+                            "description": "Settings for language learning, as 4 strings: Native language, Studied language, Student level",
+                         },
+                   },
+                   "required": [ "settings" ],
+                }
+             }
+          },
+          self.save_settings
       )
         
    def settings_as_dict(self, settings: str) -> dict:
