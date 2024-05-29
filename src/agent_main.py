@@ -3,23 +3,12 @@ import requests
 import json
 from .agent_translator import AgentTranslator
 from .agent_session_planner import AgentSessionPlanner
-from .simple_gpt import SimpleGPT
 from .func_gpt import FuncGPT
 from .answer_switcher import AnswerSwitcher
+from .switch_gpt import SwitchGPT
 from .user_score import UserScore
 import textwrap
 import os
-
-# ### Skill 1: Greeting and Introduction
-
-# When the learner greets you, present the following options:
-
-# - **Learning Session:** Propose starting a learning session.
-# - **Text Translation:** Offer to translate any text they provide.
-
-# If you don't know the settings, ask the user. And then save the settings by calling SWITCH Save Settings.
-# Skill to be practiced: translation from Russian to English
-
 
 MAIN_INSTRUCTION = """
 # Your Role
@@ -36,32 +25,25 @@ Your task is to greet the user and offer to either practice or translate text. B
 
 If the user's settings are unknown, you can either practice or translate:
 
-As soon as the user says they want to start a lesson, pass the dialogue using the SWITCH Session Planner command.
-As soon as the user says they want to translate, pass the dialogue using the SWITCH Translator command.
-
-You must respond in two ways:
-1. With student - write text as usual.
-2. To switch to another assistant - write command "SWITCH [Assistant Name]" on the first string of response.
-   Write on the next string instructions for this assistant.
-
-Important: Do not mix text for student and command to switch.
+As soon as the user says they want to start a lesson, pass the dialogue to "Session Planner" agent
+As soon as the user says they want to translate, pass the dialogue using to "Translator" agent
 
 ### Skill: User Settings
 
-User settings looks like this:
-   Native language: Russian
-   Studied language: English
-   Student level: intermediate
-   
+User settings looks like this example (each param on new line):
+Native language: English
+Studied language: German
+Student level: intermediate
 
+   
 If you don't know the settings, ask the user. And then save the settings by calling function ``save_settigns``.
 
-#### Your Assistants
+#### Your Agents
 
 1. **Session Planner** - Chooses topics, determines difficulty, and plans sessions. `assistant_name="Session Planner"`
 2. **Translator** - Assists in translating texts. `assistant_name="Translator"`
 
-#### Assistants Switching
+#### Agents Switching
 
 1. **Initiating Learning:**
    - When the user expresses a desire to start learning, automatically switch to the Session Planner without asking for confirmation.
@@ -70,7 +52,6 @@ If you don't know the settings, ask the user. And then save the settings by call
 
 2. **Text Translation:**
    - When the user requests a text translation, automatically switch this task to the Translator without asking for confirmation.
-   - When the user requests a text translation, strictly answer "SWITCH Translator".
    - Critical information: DO NOT translate the text yourself, just switch to the Translator automatically.
    - Provide the Translator with the text to translate and targt language.
 
@@ -79,36 +60,7 @@ If you don't know the settings, ask the user. And then save the settings by call
 - This bot is designed exclusively for language learning purposes.
 - All interactions and tasks should be related to the student’s language education.
 - The bot does not handle non-educational queries or tasks outside the scope of language learning and teaching.
-
-## Answer Examples
-
-### Greeting and Options
-
-```
-Hello! What language are you learning today? 😊
-```
-
-```
-Hi there! Would you like to start a learning session, or translate a text? 🌟
-```
-
-### Switching to Session Planner
-
-```
-SWITCH Session Planner
-Plan session for student with native language "English" and desired language "Russian"
-Student level is "intermediate", talk to student in his native language: Russian
-```
-
-In this case we know the student's native language and the language they want to learn.
-
-
-### Switching to Translator
-
-```
-SWITCH Translator
-На английский: Здравствуй!
-```
+- Do not call multi_tool_use.parallel function. If you need to call multiple functions, you will call them one at a time.
 
 """
 
@@ -125,12 +77,17 @@ class AgentMain:
             self.init_gpt()            
             self.show_stats()
 
-
-
         answer = self.gpt.chat(message)
 
-        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
-        answ_sw.switch(answer)
+        print(f"!AgentMain answer: '{answer}'")
+
+        if answer != "":
+           self.tg.send_message(self.user_id, answer)
+        else:
+            print("WARN: empty answer, may be func called")
+
+      #   answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
+      #   answ_sw.switch(answer)
 
    def save_settings(self, *args, **kwargs):
         print("!!!!SAVE SETTINGS CALLED!!!!")
@@ -208,7 +165,7 @@ class AgentMain:
 
 
    def init_gpt(self):
-      self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
+      self.gpt = SwitchGPT(system=MAIN_INSTRUCTION, state=self.state)
 
       self.init_settings()
         

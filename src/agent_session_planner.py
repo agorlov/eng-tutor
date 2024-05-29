@@ -114,8 +114,8 @@ class AgentSessionPlanner:
 
         # Случайный вариант направления перевода
         direction = [
-            "Suggest phrases in the user's native language for translation into the foreign language.",
-            "Suggest phrases in the foreign language for translation into the user's native language."
+            "Suggest phrases in the user's native language for translation into the studied language.",
+            # "Suggest phrases in the studied language for translation into the user's native language."
         ]
 
         # Подстановка значений в промпт

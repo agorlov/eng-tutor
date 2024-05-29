@@ -39,14 +39,23 @@ class FuncGPT:
         )
         
         if resp.choices[0].message.tool_calls:
+            
             func_name = resp.choices[0].message.tool_calls[0].function.name
+            print(f"!!!FuncGPT: tool call: {func_name}")
             if func_name not in self.funcs:
                 raise Exception(f"Unknown function: {func_name}")
-            
-            args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
-            
-            func = self.funcs[func_name]
-            func_result = func(args)
+                # func_result = f"Error, unknown function: {func_name}"
+            else:                
+                args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
+                
+                func = self.funcs[func_name]
+                func_result = func(args)
+
+            # Если функция ничего не возвращает, то не делаем follow_up
+            # например функция переключающая агента не требует интерпретации ответа. 
+            # т.к. не возвращает ответа, а просто запускает другого агента.
+            if func_result is None:
+                return ""
 
             self.context.append({ "role": "function", "name": func_name, "content": func_result})
 
@@ -54,7 +63,7 @@ class FuncGPT:
                 messages=self.context,
                 model=self.model,
                 tools=self.funcs_desc,
-                tool_choice="auto"            
+                tool_choice="auto"
             )
 
             final_output = follow_up.choices[0].message.content
@@ -62,6 +71,7 @@ class FuncGPT:
             
             return final_output
 
+        print(f"!!! FuncGPT answer: {resp.choices[0].message.content}")
         self.context.append({ "role": "assistant", "content": resp.choices[0].message.content })
 
         return resp.choices[0].message.content
