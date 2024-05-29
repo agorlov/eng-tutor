@@ -66,7 +66,7 @@ class AnswerSwitcher:
         user_message = None
         switch_message = None
 
-        if "SWITCH" in str:
+        if "SWITCH" in str.upper():
             parts = str.split("SWITCH", 1)
             user_message = parts[0].strip()
             if user_message == '':

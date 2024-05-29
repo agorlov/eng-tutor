@@ -1,5 +1,6 @@
 import logging
 from pprint import pprint
+import os
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
@@ -21,6 +22,9 @@ If the student makes a mistake, correct them and ask them to translate the phras
 
 ## Instructions
 
+If a student requests help with translating a phrase, help him with a translation.
+On the beginner level provide translation for each word.
+
 ### Lesson
 
 1. Provide the phrases from the task for translation.
@@ -28,14 +32,10 @@ If the student makes a mistake, correct them and ask them to translate the phras
 3. If the translation is correct, confirm and provide the next phrase.
 4. If the translation is incorrect, ask to translate again. [for the beginners skip this step]
 5. If the translation is incorrect again provide the correct translation and ask the student to translate it again.
+6. After the training session, praise the student and point out what to focus on. Mention how to more easily remember the spot where a mistake is made. You can use memory aids, provide a mnemonic rule if it's appropriate and one exists. However, the lesson summary should not exceed 60 words.
+7. Then switch to the Lesson Archiver agent using the "SWITCH Archiver" command and list phrases in format: (Correct;Phrase original;correct translation of the phrase).
 
-If a student requests help with translating a phrase, provide him with a translation and ask him to type the phrase to improve memorization.
-
-### Lesson results
-
-1. After the training session, praise the student and point out what to focus on. Mention how to more easily remember the spot where a mistake is made. You can use memory aids, provide a mnemonic rule if it's appropriate and one exists. However, the lesson summary should not exceed 60 words.
-2. Then switch to the Lesson Archiver agent using the "SWITCH Archiver" command and list phrases in format: (Correct;Phrase original;correct translation of the phrase).
-
+Example of the response:
 SWITCH Archiver
 Lesson results:
 Correct;Phrase 1 original;Phrase 1 translated
@@ -76,8 +76,48 @@ class AgentTeacher:
             self._gpt = SimpleGPT(
                 system=self.prompt(),
             )
+            self.init_settings()
 
         return self._gpt
 
     def prompt(self):
         return TEACHER_INSTRUCTION
+
+    def settings(self, user_id):
+         """
+         Reads the contents of a settings file for a given user ID.
+
+         Args:
+            user_id: The user ID for whom to read settings.
+
+         Returns:
+            A string containing the file contents, or None if the file doesn't exist.
+         """
+
+         print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
+
+         file_path = os.path.join("data", "settings", f"{user_id}.txt")
+
+         try:
+            with open(file_path, "r") as file:
+               contents = file.read()
+               return contents
+         except FileNotFoundError:
+            print(f"!!!!Settings for user {user_id} not found!!!!")
+            return ""
+
+    def init_settings(self):
+      """
+      Initializes the user settings for a given user ID.
+
+      1. Put them to current context as user message
+      2. Put them to user state as `setting`
+
+      """
+      settigns = self.settings(self.user_id)
+
+      if settigns != "":
+         self._gpt.context.append({
+               "role": "user",
+               "content": "My preferences:\n" + settigns
+         })

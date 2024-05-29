@@ -58,7 +58,10 @@ class AgentArchiver:
         self._gpt = None
 
     def run(self, task):
-        answer = self.gpt.chat(task)
+        answer = self.gpt.chat(
+            task + 
+            "\n\nOutput the information in structured JSON format without using markdown code blocks."
+        )
 
         # Если ответ содержит json, то обрабатываем его = выводим на экран фразы для сохранения в бд
         # декодируем json
