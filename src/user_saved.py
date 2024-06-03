@@ -2,6 +2,7 @@ from .anna_db import AnnaDB
 
 
 class UserSaved:
+    '''Сохранение данных о пользователе в базу данных'''
     def __init__(self, db=None):
         if db is None:
             self.db = AnnaDB()

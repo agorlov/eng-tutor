@@ -1,6 +1,7 @@
 import os
 
 class UserSettings:
+    '''Создание файла с настройками пользователя'''
     def save(self,  args, user_id):
         # Формируем путь к файлу настроек пользователя
         file_path = f'data/settings/{user_id}.txt'
