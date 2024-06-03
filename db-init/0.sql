@@ -1,4 +1,5 @@
-CREATE TABLE phrases (
+-- Phrases table
+CREATE TABLE Phrases (
     id SERIAL PRIMARY KEY,
     user_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
