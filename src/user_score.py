@@ -1,11 +1,10 @@
 from .anna_db import AnnaDB
 
-
 class UserScore:
     """
     Скор пользователя
     """
-    def __init__(self, user_id, db=None):
+    def __init__(self, user_id, db = None):
         self.user_id = user_id
         if db is None:
             self.db = AnnaDB()
@@ -16,27 +15,15 @@ class UserScore:
         """
         Начисление очков за выполнение дела или за другие действия
         """
-
         cursor = self.db.db().cursor()
-        '''
         cursor.execute("""
             INSERT INTO users (telegram_id, score)
             VALUES (%s, %s)
             ON CONFLICT (telegram_id) 
-            DO UPDATE  SET score = users.score + EXCLUDED.score;
-            """,  # "UPDATE users SET score = score + %s WHERE telegram_id = %s",
-            (self.user_id, points)  #, points, self.user_id)
+            DO UPDATE SET score = users.score + EXCLUDED.score;
+            """, # "UPDATE users SET score = score + %s WHERE telegram_id = %s",            
+            (self.user_id, points)
         )
-        cursor.close()
-        '''
-        cursor.execute("""
-                INSERT INTO users (telegram_id, score)
-                VALUES (%s, %s)
-                ON CONFLICT (telegram_id) 
-                DO UPDATE  SET score = users.score + EXCLUDED.score;
-                """,
-                       (self.user_id, points,))
-
         cursor.close()
 
     def stats(self):
@@ -70,6 +57,7 @@ class UserScore:
                 'success_repetitions': 0,
                 'phrases_learned': 0
             } 
+
 
     def user_score(self):
         """

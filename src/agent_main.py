@@ -9,7 +9,6 @@ from .answer_switcher import AnswerSwitcher
 from .user_score import UserScore
 import textwrap
 import os
-from src.user_settings import UserSettings
 
 # ### Skill 1: Greeting and Introduction
 
@@ -117,19 +116,19 @@ SWITCH Translator
 """
 
 
-
 class AgentMain:
    def __init__(self, tg, state, user_id):
         self.gpt = None # FuncGPT(system=MAIN_INSTRUCTION)
         self.tg = tg
         self.state = state
         self.user_id = user_id
-        self.Settings = UserSettings()
     
    def run(self, message):
         if self.gpt is None:
             self.init_gpt()            
             self.show_stats()
+
+
 
         answer = self.gpt.chat(message)
 
@@ -140,9 +139,16 @@ class AgentMain:
         print("!!!!SAVE SETTINGS CALLED!!!!")
         print(args[0]['settings'])
 
-        self.Settings.save(args[0]['settings'], self.user_id)
+        # Формируем путь к файлу настроек пользователя
+        file_path = f'data/settings/{self.user_id}.txt'
+         
+        # Сохраняем строку настроек в файл
+        with open(file_path, 'w') as file:
+           file.write(args[0]['settings'])
 
         self.init_settings()
+    
+        print(f"!Настройки пользователя {self.user_id} сохранены в файле {file_path}")
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
@@ -156,11 +162,18 @@ class AgentMain:
          Returns:
             A string containing the file contents, or None if the file doesn't exist.
          """
+
          print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
 
-      
-         return self.Settings.load(self.user_id)
-         
+         file_path = os.path.join("data", "settings", f"{user_id}.txt")
+
+         try:
+            with open(file_path, "r") as file:
+               contents = file.read()
+               return contents
+         except FileNotFoundError:
+            print(f"!!!!Settings for user {user_id} not found!!!!")
+            return ""
 
    def init_settings(self):
       """

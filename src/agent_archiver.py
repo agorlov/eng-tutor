@@ -68,14 +68,14 @@ class AgentArchiver:
 
             # Обработка данных после успешного декодирования
             print("!Данные успешно декодированы, сохраняем их в базу данных")
-            print(data)
+            print(data)            
 
             PhrasesSaved(
                 self.user_id,
                 self.state['settings']['Native language'],
                 self.state['settings']['Studied language'],
             ).save_phrases(data)
-
+        
         except json.JSONDecodeError as e:
             # Обработка ошибки декодирования JSON
             print(f"Похоже это не JSON, идем дальше.")
@@ -87,8 +87,8 @@ class AgentArchiver:
         correct_count = 0
         for phrase in data:
             if phrase['correct']:
-                correct_count += 1
-
+                correct_count += 1                
+                
         bonus = correct_count * 5
         self.score.update_score(bonus)
         total_bonuses = self.score.user_score()
@@ -97,9 +97,7 @@ class AgentArchiver:
             f"[{correct_count}/7] 👍 +{bonus} XP. Total XP: {total_bonuses}"
         )
 
-        StateSwitcher(self.state).switch("Main",
-                                         "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
-
+        StateSwitcher(self.state).switch("Main", "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
 
     @property
     def gpt(self):

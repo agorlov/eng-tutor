@@ -59,7 +59,7 @@ class PhrasesSaved:
 
                 cursor.execute("""
                     SELECT id, total_repetitions, success_repetitions
-                    FROM Phrases
+                    FROM phrases
                     WHERE user_id = %s AND phrase = %s
                     """,
                     (self.user_id, phrase_orig)
@@ -75,7 +75,7 @@ class PhrasesSaved:
                         success_repetitions += 1
 
                     cursor.execute("""
-                        UPDATE Phrases
+                        UPDATE phrases
                         SET total_repetitions = %s,
                             success_repetitions = %s,
                             last_repeat = %s
@@ -84,9 +84,8 @@ class PhrasesSaved:
                         (total_repetitions, success_repetitions, current_timestamp, phrase_id)
                     )
                 else:
-                    print(self.user_id)
                     cursor.execute("""
-                        INSERT INTO Phrases (
+                        INSERT INTO phrases (
                             user_id,
                             native_lang, 
                             studied_lang, 

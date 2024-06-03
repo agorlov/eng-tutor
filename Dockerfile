@@ -27,7 +27,7 @@ RUN chmod 0644 /etc/cron.d/cronjob && touch /var/log/cron.log
 RUN sed -i '/session    required     pam_loginuid.so/c\#session    required   pam_loginuid.so' /etc/pam.d/cron
 
 # Run bot.py and cronjob
-CMD python bot2.py
+CMD python bot.py
 
 
 
