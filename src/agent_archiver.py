@@ -29,8 +29,9 @@ In format of json:
 ]
 
 Put only json to the answer, because it will be saved in database and it will programmatically be processed.
+Start your answer with "```json".
 
-## Your Input, example
+## Your Input example
 
 Lesson results:
 Correct;Phrase 1 original;Phrase 1 translated
@@ -58,15 +59,13 @@ class AgentArchiver:
         self._gpt = None
 
     def run(self, task):
-        answer = self.gpt.chat(
-            task + 
-            "\n\nOutput the information in structured JSON format without using markdown code blocks."
-        )
+        answer = self.gpt.chat(task)
 
         # Если ответ содержит json, то обрабатываем его = выводим на экран фразы для сохранения в бд
         # декодируем json
         try:
             # Попытка декодирования JSON
+            answer = answer.replace("```json", "").replace("```", "")
             data = json.loads(answer)
 
             # Обработка данных после успешного декодирования

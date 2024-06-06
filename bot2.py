@@ -49,10 +49,7 @@ def start(message):
     user_language = message.from_user.language_code    
     print(f"!User Language: {user_language}")
 
-    user_id = message.chat.id
-
-    # костыль для видео, чтобы приветствие было на английском для меня (425709869)
-    if user_language == 'ru' and user_id != 425709869:
+    if user_language == 'ru':
         tg.send_message(message.chat.id, """
 🎉 Привет! Меня зовут Анна. 🌟
 

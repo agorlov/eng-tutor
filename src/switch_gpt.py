@@ -51,7 +51,7 @@ class SwitchGPT:
                 "type": "function",
                 "function": {
                     "name": "switch_agent",
-                    "description": "Switch agent",
+                    "description": "Switch to an agent",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -61,7 +61,7 @@ class SwitchGPT:
                             },
                             "task": {
                                 "type": "string",
-                                "description": "Task or comment for Session Planner Agent"
+                                "description": "A task or message for the agent we are switching to."
                             }
                         },
                         "required": ["agent_name", "task"],
@@ -72,13 +72,11 @@ class SwitchGPT:
         )
     
     def switch_func(self, *args, **kwargs):
-        print("!!!!SWITCH FUNC CALLED!!!!")
-
         agent_name = args[0]['agent_name']
         task = args[0]['task']
-        
-        print(f"!Task to {agent_name}: {task}")
-       
+
+        print(f"!!!!SwitchGPT: SWITCH FUNC CALLED!!!! -> {agent_name}\nTask: {task}")
+
         self.switcher.switch(agent_name, task)
 
     
