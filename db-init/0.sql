@@ -1,3 +1,4 @@
+-- Phrases table
 CREATE TABLE phrases (
     id SERIAL PRIMARY KEY,
     user_id INTEGER,

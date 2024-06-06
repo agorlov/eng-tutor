@@ -9,6 +9,7 @@ from .switch_gpt import SwitchGPT
 from .user_score import UserScore
 import textwrap
 import os
+from src.user_settings import UserSettings
 
 MAIN_INSTRUCTION = """
 # Your Role
@@ -21,7 +22,10 @@ Always communicate with the student in their native language, which they use to 
 
 ### Skill: Learning Facilitation
 
-Your task is to greet the user and offer to either practice or translate text. Before the lesson begins, make sure you know the user's settings. What is their native language, what language do they usually write in, what language they want to learn, and what is their proficiency level in that language.
+Your task is to greet the user and offer to  practice.
+Before the lesson begins, make sure you know the user's settings.
+What is their native language, what language do they usually write in,
+what language they want to learn, and what is their proficiency level in that language.
 
 If the user's settings are unknown, you can either practice or translate:
 
@@ -62,7 +66,9 @@ If you don't know the settings, ask the user. And then save the settings by call
 - The bot does not handle non-educational queries or tasks outside the scope of language learning and teaching.
 - Do not call multi_tool_use.parallel function. If you need to call multiple functions, you will call them one at a time.
 
+
 """
+
 
 
 class AgentMain:
@@ -71,6 +77,7 @@ class AgentMain:
         self.tg = tg
         self.state = state
         self.user_id = user_id
+        self.settings = UserSettings()
     
    def run(self, message):
         if self.gpt is None:
@@ -93,16 +100,9 @@ class AgentMain:
         print("!!!!SAVE SETTINGS CALLED!!!!")
         print(args[0]['settings'])
 
-        # Формируем путь к файлу настроек пользователя
-        file_path = f'data/settings/{self.user_id}.txt'
-         
-        # Сохраняем строку настроек в файл
-        with open(file_path, 'w') as file:
-           file.write(args[0]['settings'])
+        self.settings.save(args[0]['settings'], self.user_id)
 
         self.init_settings()
-    
-        print(f"!Настройки пользователя {self.user_id} сохранены в файле {file_path}")
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
@@ -116,18 +116,11 @@ class AgentMain:
          Returns:
             A string containing the file contents, or None if the file doesn't exist.
          """
-
          print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
 
-         file_path = os.path.join("data", "settings", f"{user_id}.txt")
-
-         try:
-            with open(file_path, "r") as file:
-               contents = file.read()
-               return contents
-         except FileNotFoundError:
-            print(f"!!!!Settings for user {user_id} not found!!!!")
-            return ""
+      
+         return self.Settings.load(self.user_id)
+         
 
    def init_settings(self):
       """
@@ -148,7 +141,6 @@ class AgentMain:
          # Сохраним настройки в self.state
          self.state['settings'] = self.settings_as_dict(settigns)
 
-         self.tg.send_message(self.user_id, "Settings:\n" + settigns)
 
    def show_stats(self):
       stats = ""

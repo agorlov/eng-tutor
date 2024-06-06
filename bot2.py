@@ -9,7 +9,8 @@ from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
-
+#from src.anna_db import AnnaDB #  (если без докера)
+from src.user_saved import UserSaved
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -76,6 +77,8 @@ Here's how it will work:
 @tg.message_handler(func=lambda message: True)
 def respond(message):
     user_id = message.chat.id
+    username = message.from_user.username
+
     logging.info(f"Rcv {user_id}: {message.text}")
 
     init_user_context(user_id)
@@ -83,9 +86,12 @@ def respond(message):
     agent = user_context[user_id]['agent']
     agent.run(message.text)
 
+    # обновим таблицу users, когда юзер последний раз обращался к боту
+    UserSaved().save_user(user_id, username)
 
 try:
     tg.polling(none_stop=True)
 except Exception as e:
     print_exc()
     exit(1)
+

@@ -1,8 +1,15 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from config import DBCONN
+from config import host, user, password
 
-class AnnaDB():
+
+class AnnaDB:
+    def __init__(self):
+        self.user = DBCONN['user']
+        self.password = DBCONN['password']
+        self.host = DBCONN['host']
+        self.dbname = DBCONN['dbname']
 
     def db(self):
         db = psycopg2.connect(

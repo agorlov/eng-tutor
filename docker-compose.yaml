@@ -38,7 +38,7 @@ services:
       - .:/app
     networks:
       - my-network
-    command: python bot.py
+    command: python bot2.py
 
 
   anna_cron:

@@ -4,7 +4,7 @@ from .anna_db import AnnaDB
 
 class PhrasesSaved:
     """
-    Класс для сохранения записанных фраз.
+    Фразы для повторения, сохраненые в БД
 
     Attributes:
         user_id (int): ID пользователя.
@@ -84,6 +84,7 @@ class PhrasesSaved:
                         (total_repetitions, success_repetitions, current_timestamp, phrase_id)
                     )
                 else:
+                    print(self.user_id)
                     cursor.execute("""
                         INSERT INTO phrases (
                             user_id,
