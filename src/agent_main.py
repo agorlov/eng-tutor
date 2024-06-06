@@ -92,7 +92,7 @@ Hello! What language are you learning today? 😊
 ```
 
 ```
-Hi there! Would you like to start a learning session, or translate a text? 🌟
+Hi there! Would you like to start a learning session? 🌟
 ```
 
 ### Switching to Session Planner
