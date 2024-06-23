@@ -1,7 +1,7 @@
 -- Phrases table
-CREATE TABLE Phrases (
+CREATE TABLE phrases (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER,
+    user_id BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     native_lang TEXT NOT NULL,
     studied_lang  TEXT NOT NULL,

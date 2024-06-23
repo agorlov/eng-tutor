@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import requests
 import json
 from .agent_translator import AgentTranslator
@@ -10,6 +11,10 @@ from .user_score import UserScore
 import textwrap
 import os
 from src.user_settings import UserSettings
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ### Skill 1: Greeting and Introduction
 
@@ -93,7 +98,7 @@ Hello! What language are you learning today? 😊
 ```
 
 ```
-Hi there! Would you like to start a learning session? 🌟
+Hi there! Would you like to start a learning session, or translate a text? 🌟
 ```
 
 ### Switching to Session Planner
@@ -119,28 +124,28 @@ SWITCH Translator
 
 
 class AgentMain:
-   def __init__(self, tg, state, user_id):
+   def __init__(self, message, state, user_id):
         self.gpt = None # FuncGPT(system=MAIN_INSTRUCTION)
-        self.tg = tg
+        self.message = message
         self.state = state
         self.user_id = user_id
-        self.Settings = UserSettings()
+        self.u_settings = UserSettings(user_id)
     
-   def run(self, message):
+   async def run(self, message):
         if self.gpt is None:
-            self.init_gpt()            
-            self.show_stats()
+            await self.init_gpt()
+            await self.show_stats()
 
         answer = self.gpt.chat(message)
 
-        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
-        answ_sw.switch(answer)
+        answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
+        await answ_sw.switch(answer)
 
    def save_settings(self, *args, **kwargs):
-        print("!!!!SAVE SETTINGS CALLED!!!!")
-        print(args[0]['settings'])
+        logger.info("SAVE SETTINGS CALLED")
+        logger.info(args[0]['settings'])
 
-        self.Settings.save(args[0]['settings'], self.user_id)
+        self.u_settings.save(args[0]['settings'])
 
         self.init_settings()
 
@@ -156,13 +161,13 @@ class AgentMain:
          Returns:
             A string containing the file contents, or None if the file doesn't exist.
          """
-         print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
+         logger.info(f"LOAD SETTINGS CALLED {self.user_id}")
 
       
-         return self.Settings.load(self.user_id)
-         
+         return self.u_settings.load()
+          
 
-   def init_settings(self):
+   async def init_settings(self):
       """
       Initializes the user settings for a given user ID.
 
@@ -181,9 +186,9 @@ class AgentMain:
          # Сохраним настройки в self.state
          self.state['settings'] = self.settings_as_dict(settigns)
 
-         self.tg.send_message(self.user_id, "Settings:\n" + settigns)
+         await self.message.answer("Settings:\n" + settigns)
 
-   def show_stats(self):
+   async def show_stats(self):
       stats = ""
 
       statsdict = UserScore(self.user_id).stats()
@@ -192,15 +197,14 @@ class AgentMain:
          value = statsdict[param]
          stats += f"{param}: {value}\n"
 
-      self.tg.send_message(self.user_id, stats)
+      await self.message.answer(stats)
 
       return stats
 
-
-   def init_gpt(self):
+   async def init_gpt(self):
       self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
 
-      self.init_settings()
+      await self.init_settings()
         
       self.gpt.add_func(
           {

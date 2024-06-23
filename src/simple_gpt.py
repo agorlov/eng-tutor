@@ -3,7 +3,7 @@ from config import OPENAI_API_KEY, OPENAI_API_BASEURL
 
 class SimpleGPT:
 
-    def __init__(self, system, model = "gpt-4o", oai = None):
+    def __init__(self, system, model="gpt-4o", oai=None):
         """
         Simple GPT client.
 
@@ -15,7 +15,7 @@ class SimpleGPT:
 
         self.model = model
         self.context = [ 
-            { "role": "system", "content": system }
+            {"role": "system", "content": system}
         ]
 
         if oai is None:
@@ -25,21 +25,21 @@ class SimpleGPT:
 
     def chat(self, message):
 
-        self.context.append({ "role": "user", "content": message })
+        self.context.append({"role": "user", "content": message})
 
         resp = self.oai.chat.completions.create(
             messages=self.context,
             model=self.model
         )
 
-        self.context.append({ "role": "assistant", "content": resp.choices[0].message.content })
+        self.context.append({"role": "assistant", "content": resp.choices[0].message.content})
 
         return resp.choices[0].message.content
     
     # вывести контекст для отладки без system, в виде диалога
     def debug(self):
         return "\n".join(
-            f"[{msg['role']}] " + msg["content"]
+            f"[{msg['role']}]" + msg["content"]
             for msg in self.context[1:]
         )
 

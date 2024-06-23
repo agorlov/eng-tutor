@@ -1,5 +1,5 @@
-import logging
-from pprint import pprint
+import asyncio
+
 from .simple_gpt import SimpleGPT
 from .state_switcher import StateSwitcher
 
@@ -21,15 +21,15 @@ In the answer must be only translated text.
 """
 
 class AgentTranslator:
-    def __init__(self, tg, state, user_id):
-        self.tg = tg
+    def __init__(self, message, state, user_id):
+        self.message = message
         self.user_id = user_id
         self.state = state
         
-    def run(self, message):
+    async def run(self, message):
 
         gpt = SimpleGPT(system=TRANSLATOR_INSTRUCTION)
-        self.tg.send_message(self.user_id, gpt.chat(message))
+        await self.message.answer(gpt.chat(message))
 
         StateSwitcher(self.state).switch("Main", "")
 

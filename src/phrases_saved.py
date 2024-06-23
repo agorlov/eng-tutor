@@ -1,13 +1,17 @@
+import logging
 from datetime import datetime
-
 from .anna_db import AnnaDB
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PhrasesSaved:
     """
     Класс для сохранения записанных фраз.
 
     Attributes:
-        user_id (int): ID пользователя.
+        user_id (int): ID пользовprintтеля.
         native_lang (str): Народная речь.
         studied_lang (str): Изучаемая речь.
         db (AnnaDB): Объект для работы с базой данных.
@@ -16,7 +20,7 @@ class PhrasesSaved:
         save_phrases(self, connection, phrases): Сохраняет фразы пользователя в базе данных.
     """
 
-    def __init__(self, user_id, native_lang, studied_lang, db = None):
+    def __init__(self, user_id, native_lang, studied_lang, db=None):
         """
         Конструктор класса PhrasesSaved.
 
@@ -59,7 +63,7 @@ class PhrasesSaved:
 
                 cursor.execute("""
                     SELECT id, total_repetitions, success_repetitions
-                    FROM Phrases
+                    FROM phrases
                     WHERE user_id = %s AND phrase = %s
                     """,
                     (self.user_id, phrase_orig)
@@ -75,7 +79,7 @@ class PhrasesSaved:
                         success_repetitions += 1
 
                     cursor.execute("""
-                        UPDATE Phrases
+                        UPDATE phrases
                         SET total_repetitions = %s,
                             success_repetitions = %s,
                             last_repeat = %s
@@ -84,9 +88,9 @@ class PhrasesSaved:
                         (total_repetitions, success_repetitions, current_timestamp, phrase_id)
                     )
                 else:
-                    print(self.user_id)
+                    logger.info("User ID: %s", self.user_id)
                     cursor.execute("""
-                        INSERT INTO Phrases (
+                        INSERT INTO phrases (
                             user_id,
                             native_lang, 
                             studied_lang, 

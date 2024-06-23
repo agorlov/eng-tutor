@@ -1,5 +1,9 @@
+import logging
 from .anna_db import AnnaDB
 
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class UserScore:
     """
@@ -18,17 +22,6 @@ class UserScore:
         """
 
         cursor = self.db.db().cursor()
-        '''
-        cursor.execute("""
-            INSERT INTO users (telegram_id, score)
-            VALUES (%s, %s)
-            ON CONFLICT (telegram_id) 
-            DO UPDATE  SET score = users.score + EXCLUDED.score;
-            """,  # "UPDATE users SET score = score + %s WHERE telegram_id = %s",
-            (self.user_id, points)  #, points, self.user_id)
-        )
-        cursor.close()
-        '''
         cursor.execute("""
                 INSERT INTO users (telegram_id, score)
                 VALUES (%s, %s)
@@ -89,7 +82,7 @@ class UserScore:
 if __name__ == '__main__':
     UserScore(user_id=1).update_score(15)
     UserScore(user_id=1).update_score(15)
-    print(UserScore(user_id=1).user_score())
+    logger.info("User 1 score: %s", UserScore(user_id=1).user_score())
 
-    print(UserScore(user_id=425709869).stats())
+    logger.info("Stats for user 425709869: %s", UserScore(user_id=425709869).stats())
 
