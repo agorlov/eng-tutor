@@ -1,9 +1,9 @@
-import logging
+import asyncio
+
 from pprint import pprint
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
-
 
 # Talk to the student in {LANGUAGE}.
 
@@ -53,17 +53,17 @@ Archiver will save the lesson results.
 """
 
 class AgentTeacher:
-    def __init__(self, tg, state, user_id):
-        self.tg = tg
+    def __init__(self, message, state, user_id):
+        self.message = message
         self.user_id = user_id
         self.state = state
         self._gpt = None
 
-    def run(self, task):
+    async def run(self, task):
         answer = self.gpt.chat(task)
 
-        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
-        answ_sw.switch(answer)
+        answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
+        await answ_sw.switch(answer)
 
     @property
     def gpt(self):

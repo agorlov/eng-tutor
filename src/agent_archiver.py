@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from pprint import pprint
 import json
 
@@ -6,6 +7,10 @@ from .simple_gpt import SimpleGPT
 from .state_switcher import StateSwitcher
 from .phrases_saved import PhrasesSaved
 from .user_score import UserScore
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 ARCHIVER_INSTRUCTION = """
 # Role: Archiver
@@ -50,14 +55,14 @@ Correct;Phrase 7 original;Phrase 7 translated
 """
 
 class AgentArchiver:
-    def __init__(self, tg, state, user_id):
-        self.tg = tg
+    def __init__(self, message, state, user_id):
+        self.message = message
         self.user_id = user_id
         self.state = state
         self.score = UserScore(user_id)
         self._gpt = None
 
-    def run(self, task):
+    async def run(self, task):
         answer = self.gpt.chat(task)
 
         # Если ответ содержит json, то обрабатываем его = выводим на экран фразы для сохранения в бд
@@ -67,8 +72,8 @@ class AgentArchiver:
             data = json.loads(answer)
 
             # Обработка данных после успешного декодирования
-            print("!Данные успешно декодированы, сохраняем их в базу данных")
-            print(data)
+            logger.info("Данные успешно декодированы, сохраняем их в базу данных")
+            logger.info(data)
 
             PhrasesSaved(
                 self.user_id,
@@ -78,8 +83,8 @@ class AgentArchiver:
 
         except json.JSONDecodeError as e:
             # Обработка ошибки декодирования JSON
-            print(f"Похоже это не JSON, идем дальше.")
-            self.tg.send_message(
+            logger.error("Похоже это не JSON, идем дальше.")
+            await self.message.answer(
                 self.user_id,
                 f"Не удалось сохранить повторенные фразы. Ответ агента Archiver: {answer}"
             )
@@ -92,12 +97,11 @@ class AgentArchiver:
         bonus = correct_count * 5
         self.score.update_score(bonus)
         total_bonuses = self.score.user_score()
-        self.tg.send_message(
-            self.user_id,
+        await self.message.answer(
             f"[{correct_count}/7] 👍 +{bonus} XP. Total XP: {total_bonuses}"
         )
 
-        StateSwitcher(self.state).switch("Main",
+        await StateSwitcher(self.state).switch("Main",
                                          "Teacher agent> The lesson was successfully completed. Suggest the student to take another lesson if he wishes.\n")
 
 

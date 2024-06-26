@@ -1,10 +1,15 @@
 import logging
+import asyncio
 from pprint import pprint
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
 from .phrases_repetition import PhrasesRepetition
 import random
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 SESSION_PLANNER_INSTRUCTION = """
 # Your Role: Learning Session Planner
@@ -79,18 +84,17 @@ Phrases:
 """
 
 class AgentSessionPlanner:
-    def __init__(self, tg, state, user_id):
-        self.tg = tg
+    def __init__(self, message, state, user_id):
+        self.message = message
         self.user_id = user_id
         self.state = state
         self._gpt = None
     
-    def run(self, task):
+    async def run(self, task):
         answer = self.gpt.chat(task)
 
-        answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
-        answ_sw.switch(answer)
-
+        answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
+        await answ_sw.switch(answer)
     
     @property
     def gpt(self):
@@ -108,9 +112,14 @@ class AgentSessionPlanner:
             studied_lang=self.state['settings']['Studied language']
         )
 
+        phrases = repetition.phrases()
+        if not phrases:
+            logger.error("PhrasesRepetition returned None or empty list")
+            phrases = []  # Инициализируем пустым списком для избежания ошибки
+
         # Форматирование списка фраз для подстановки в промпт
         formatted_phrases = "\n".join(repetition.phrases())
-        print("!Formatted phrases: " + formatted_phrases)
+        logger.info("!Formatted phrases: %s", formatted_phrases)
 
         # Случайный вариант направления перевода
         direction = [

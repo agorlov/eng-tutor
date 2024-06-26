@@ -1,5 +1,5 @@
 -- Users table
-CREATE TABLE Users (
+CREATE TABLE users (
     telegram_id BIGINT PRIMARY KEY,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     score INT DEFAULT 0,

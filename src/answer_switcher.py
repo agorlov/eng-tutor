@@ -1,23 +1,29 @@
+import logging
+import asyncio
 from .state_switcher import StateSwitcher
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AnswerSwitcher:
     """
     Переключенный агент, в зависимости от ответа от агента
     """
 
-    def __init__(self, state: dict, tg, user_id):
+    def __init__(self, state: dict, message, user_id):
         self.state = state
-        self.tg = tg
+        self.message = message
         self.switcher = StateSwitcher(state)
         self.user_id = user_id
 
-    def switch(self, answer: str) -> None:
+    async def switch(self, answer: str) -> None:
         """
         Если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента,
         а если нет, то отправляем сообщение студенту
         """
 
-        user_message, switch_message  = self.split_message(answer)
+        user_message, switch_message = self.split_message(answer)
 
         # print("!answer: " + answer)
         # print("!user_message: " + user_message)
@@ -25,8 +31,8 @@ class AnswerSwitcher:
 
 
         if user_message:
-            print("!Answer to user: " + user_message)
-            self.tg.send_message(self.user_id, user_message)
+            logger.info("!Answer to user: %s", user_message)
+            await self.message.answer(user_message)
         
         if switch_message:
             firstline = switch_message.splitlines()[0]
@@ -36,8 +42,8 @@ class AnswerSwitcher:
             task = switch_message.splitlines()[1:]
             task = '\n'.join(task)
             
-            print(f"!Task to {assistant_name}: {task}")
-            self.switcher.switch(assistant_name, task)
+            logger.info("!Task to %s: %s", assistant_name, task)
+            await self.switcher.switch(assistant_name, task)
 
     def split_message(self, str):
         """

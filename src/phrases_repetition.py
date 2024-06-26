@@ -1,6 +1,10 @@
+import logging
 from datetime import datetime
-
 from .anna_db import AnnaDB
+
+# Настраиваем логгер
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PhrasesRepetition:
     """
@@ -16,7 +20,7 @@ class PhrasesRepetition:
         save_phrases(self, connection, phrases): Сохраняет фразы пользователя в базе данных.
     """
 
-    def __init__(self, user_id, native_lang, studied_lang, db = None):
+    def __init__(self, user_id, native_lang, studied_lang, db=None):
         """
         Конструктор класса PhrasesSaved.
 
@@ -69,18 +73,12 @@ class PhrasesRepetition:
             (self.user_id, self.native_lang, self.studied_lang, count)
         )
 
-        result = []
-        
-        for phrase in cursor.fetchall():
-            result.append(phrase[0])
+        result = cursor.fetchall()
+        phrases = [row[0] for row in result]
+        logger.info("Selected phrases: %s", phrases)
 
-        cursor.close()
-
-        return result
-
-
+        return phrases
 
 if __name__ == '__main__':
-
     psaved = PhrasesRepetition(user_id=425709869, native_lang='Russian', studied_lang='English')
-    print(psaved.phrases())
+    logger.info(psaved.phrases())

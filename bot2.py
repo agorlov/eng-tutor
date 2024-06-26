@@ -1,34 +1,36 @@
 import logging
+import asyncio
 from traceback_with_variables import print_exc
 
 from config import TG_BOT_TOKEN
 
-import telebot
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart, Command
+from aiogram.types import Message
+
 from src.agent_main import AgentMain
 from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
-#from src.anna_db import AnnaDB #  (если без докера)
 from src.user_saved import UserSaved
-
-# Создание образца класса
-User_saved = UserSaved()
-
-# Формирование БД (если без докера)
-#AnnaDB().create_db()
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-tg = telebot.TeleBot(TG_BOT_TOKEN)
+# Создание образца класса
+user_saved = UserSaved()
+
+bot = Bot(token=TG_BOT_TOKEN)
+dp = Dispatcher()
 
 # Словарь для хранения контекста
 # user_id: { 'agent' : AgentMain, main_context: [], agents: {}, settings: {} }
 # todo: переименовать в state
 user_context = {}
 
-def init_user_context(user_id):
+def init_user_context(message: Message, user_id):
     if user_id in user_context:
         return
     
@@ -40,24 +42,24 @@ def init_user_context(user_id):
     }
 
     user_context[user_id]['agents'] = {
-        'Main': AgentMain(tg, user_context[user_id], user_id),
-        'Translator': AgentTranslator(tg, user_context[user_id], user_id),
-        'Session Planner': AgentSessionPlanner(tg, user_context[user_id], user_id),
-        'Teacher': AgentTeacher(tg, user_context[user_id], user_id),
-        'Archiver': AgentArchiver(tg, user_context[user_id], user_id),
+        'Main': AgentMain(message, user_context[user_id], user_id),
+        'Translator': AgentTranslator(message, user_context[user_id], user_id),
+        'Session Planner': AgentSessionPlanner(message, user_context[user_id], user_id),
+        'Teacher': AgentTeacher(message, user_context[user_id], user_id),
+        'Archiver': AgentArchiver(message, user_context[user_id], user_id),
     }
 
     # Начинаем с агента Main
     user_context[user_id]['agent'] = user_context[user_id]['agents']['Main']
 
 # /start
-@tg.message_handler(commands=['start'])
-def start(message):
-    user_language = message.from_user.language_code    
-    print(f"!User Language: {user_language}")
+@dp.message(CommandStart())
+async def start(message):
+    user_language = message.from_user.language_code
+    logger.info("!User Language: %s", user_language)
 
     if user_language == 'ru':
-        tg.send_message(message.chat.id, """
+        await message.answer("""
 🎉 Привет! Меня зовут Анна. 🌟
 
 Я тут, чтобы помочь тебе освоить английский без скуки! 😊
@@ -68,7 +70,7 @@ def start(message):
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
         """)
     else:
-        tg.send_message(message.chat.id, """
+        await message.answer("""
 🎉 Hi! My name is Anna. 🌟
 
 I'm here to help you learn a foreign language without any boredom! 😊
@@ -80,24 +82,27 @@ Here's how it will work:
         """)
 
 
-@tg.message_handler(func=lambda message: True)
-def respond(message):
+@dp.message()
+async def respond(message: Message):
     user_id = message.chat.id
     username = message.from_user.username
 
     logging.info(f"Rcv {user_id}: {message.text}")
 
-    init_user_context(user_id)
+    init_user_context(message, user_id)
     
     agent = user_context[user_id]['agent']
-    agent.run(message.text)
+    await agent.run(message.text)
 
-    User_saved.save_user(user_id, username)
+    user_saved.save_user(user_id, username)
 
 
-try:
-    tg.polling(none_stop=True)
-except Exception as e:
-    print_exc()
-    exit(1)
+async def main():
+    await dp.start_polling(bot)
 
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print('Exit')
