@@ -1,7 +1,7 @@
 import logging
 from pprint import pprint
 
-from .simple_gpt import SimpleGPT
+from .switch_gpt import SwitchGPT
 from .answer_switcher import AnswerSwitcher
 from .phrases_repetition import PhrasesRepetition
 import random
@@ -24,7 +24,7 @@ Your goal is to plan a learning session by selecting and providing phrases.
 
 
 1. With student - write text as usual.
-2. After the topic is chosen, simply write the command "SWITCH Teacher" and phrases for the lesson (see example below). This will switch the student to the "Teacher" agent and start the lesson.
+2. After the topic is chosen, switch to the agent "Teacher" by calling switch_agent function. This will switch the student to the "Teacher" agent and start the lesson.
 
    
 ### Input Data
@@ -41,8 +41,6 @@ Your goal is to plan a learning session by selecting and providing phrases.
 Please return the topic and the phrases in the following structured format:
 {TRANSLATE_DIRECTION}
 
-
-SWITCH Teacher
 Topic: [Lesson Topic]
 Native language: [Native Language]
 Studied language: [Studied Language]
@@ -57,7 +55,6 @@ Phrases:
 
 Example for Russian:
 
-SWITCH Teacher
 Topic: погода
 Native language: русский
 Studied language: english
@@ -95,9 +92,7 @@ class AgentSessionPlanner:
     @property
     def gpt(self):
         if self._gpt is None:
-            self._gpt = SimpleGPT(
-                system=self.prompt(),
-            )
+            self._gpt = SwitchGPT(system=SESSION_PLANNER_INSTRUCTION, state=self.state)
 
         return self._gpt
 

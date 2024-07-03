@@ -9,7 +9,6 @@ from src.agent_translator import AgentTranslator
 from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
-#from src.anna_db import AnnaDB #  (если без докера)
 from src.user_saved import UserSaved
 
 # Настроим логирование
@@ -84,6 +83,8 @@ def respond(message):
     init_user_context(user_id)
     
     agent = user_context[user_id]['agent']
+    from pprint import pprint
+    pprint(message)
     agent.run(message.text)
 
     # обновим таблицу users, когда юзер последний раз обращался к боту

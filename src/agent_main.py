@@ -88,13 +88,10 @@ class AgentMain:
 
         print(f"!AgentMain answer: '{answer}'")
 
-        if answer != "":
-           self.tg.send_message(self.user_id, answer)
-        else:
-            print("WARN: empty answer, may be func called")
-
-      #   answ_sw = AnswerSwitcher(self.state, self.tg, self.user_id)
-      #   answ_sw.switch(answer)
+        if answer is None or answer == "":
+            raise Exception(f"WARN: empty answer, may be func called: message was: '{message}'")
+            
+        self.tg.send_message(self.user_id, f"> {answer}")
 
    def save_settings(self, *args, **kwargs):
         print("!!!!SAVE SETTINGS CALLED!!!!")
@@ -104,22 +101,7 @@ class AgentMain:
 
         self.init_settings()
 
-        return "Настройки пользователя сохранены:\n " + args[0]['settings']
-
-   def settings(self, user_id):
-         """
-         Reads the contents of a settings file for a given user ID.
-
-         Args:
-            user_id: The user ID for whom to read settings.
-
-         Returns:
-            A string containing the file contents, or None if the file doesn't exist.
-         """
-         print(f"!!!!LOAD SETTINGS CALLED!!!! {self.user_id}")
-
-      
-         return self.Settings.load(self.user_id)
+        return "Настройки пользователя сохранены:\n " + args[0]['settings']         
          
 
    def init_settings(self):
@@ -130,7 +112,7 @@ class AgentMain:
       2. Put them to user state as `setting`
 
       """
-      settigns = self.settings(self.user_id)
+      settigns = self.settings.load(self.user_id)
 
       if settigns != "":
          self.gpt.context.append({
