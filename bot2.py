@@ -1,10 +1,9 @@
 import logging
 import asyncio
-from traceback_with_variables import print_exc
 
 from config import TG_BOT_TOKEN
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
@@ -14,6 +13,7 @@ from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
 from src.user_saved import UserSaved
+from src.voice_handler import Voice_handler
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Создание образца класса
 user_saved = UserSaved()
+voice_handler = Voice_handler()
 
 bot = Bot(token=TG_BOT_TOKEN)
 dp = Dispatcher()
@@ -30,15 +31,16 @@ dp = Dispatcher()
 # todo: переименовать в state
 user_context = {}
 
+
 def init_user_context(message: Message, user_id):
     if user_id in user_context:
         return
-    
+
     user_context[user_id] = {
         'agent': None,
         'main_context': [],
         'agents': {},
-        'settings': {} # todo перенести код считывающий настройки из AgentMain (когда появится UserSettings)
+        'settings': {}  # todo перенести код считывающий настройки из AgentMain (когда появится UserSettings)
     }
 
     user_context[user_id]['agents'] = {
@@ -51,6 +53,7 @@ def init_user_context(message: Message, user_id):
 
     # Начинаем с агента Main
     user_context[user_id]['agent'] = user_context[user_id]['agents']['Main']
+
 
 # /start
 @dp.message(CommandStart())
@@ -87,18 +90,35 @@ async def respond(message: Message):
     user_id = message.chat.id
     username = message.from_user.username
 
-    logging.info(f"Rcv {user_id}: {message.text}")
+    #  Обработка голоса
+    if message.content_type == types.ContentType.VOICE:
+        agent = user_context[user_id]['agent']
+        audio_file_path = await voice_handler.download_file(user_id, message, bot, agent)
 
-    init_user_context(message, user_id)
-    
-    agent = user_context[user_id]['agent']
-    await agent.run(message.text)
+        if audio_file_path:
+            audio_answer = await voice_handler.recognize(audio_file_path, message)
+
+            logging.info(f"[Audio] Rcv {user_id}: {audio_answer}")
+
+            init_user_context(audio_answer, user_id)
+
+            agent = user_context[user_id]['agent']
+            await agent.run(audio_answer)
+
+    #  Обработка текста
+    if message.content_type == types.ContentType.TEXT:
+        logging.info(f"[Text] Rcv {user_id}: {message.text}")
+        init_user_context(message, user_id)
+
+        agent = user_context[user_id]['agent']
+        await agent.run(message.text)
 
     user_saved.save_user(user_id, username)
 
 
 async def main():
     await dp.start_polling(bot)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)

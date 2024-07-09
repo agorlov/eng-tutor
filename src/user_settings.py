@@ -5,12 +5,14 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class UserSettings:
     '''Настройки пользователя сохранены в текстовый файл'''
-    def __init__(self, user_id):
-        self.user_id = user_id  
 
-    def save(self,  args):
+    def __init__(self, user_id):
+        self.user_id = user_id
+
+    def save(self, args):
         # Формируем путь к файлу настроек пользователя
         file_path = f'data/settings/{self.user_id}.txt'
 
@@ -19,7 +21,6 @@ class UserSettings:
             file.write(args)
 
         logger.info("!Настройки пользователя %s сохранены в файле %s", self.user_id, file_path)
-        
 
     def load(self):
         file_path = os.path.join("data", "settings", f"{self.user_id}.txt")

@@ -1,6 +1,4 @@
 import logging
-import asyncio
-from pprint import pprint
 import json
 
 from .simple_gpt import SimpleGPT

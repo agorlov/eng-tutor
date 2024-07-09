@@ -1,15 +1,9 @@
 import logging
-import asyncio
-import requests
-import json
-from .agent_translator import AgentTranslator
-from .agent_session_planner import AgentSessionPlanner
-from .simple_gpt import SimpleGPT
+
 from .func_gpt import FuncGPT
 from .answer_switcher import AnswerSwitcher
 from .user_score import UserScore
-import textwrap
-import os
+
 from src.user_settings import UserSettings
 
 # Настраиваем логгер
@@ -61,7 +55,7 @@ User settings looks like this example (each param on new line):
 Native language: English
 Studied language: German
 Student level: intermediate
-   
+
 
 If you don't know the settings, ask the user. And then save the settings by calling function ``save_settigns``.
 
@@ -122,16 +116,15 @@ SWITCH Translator
 """
 
 
-
 class AgentMain:
-   def __init__(self, message, state, user_id):
-        self.gpt = None # FuncGPT(system=MAIN_INSTRUCTION)
+    def __init__(self, message, state, user_id):
+        self.gpt = None  # FuncGPT(system=MAIN_INSTRUCTION)
         self.message = message
         self.state = state
         self.user_id = user_id
         self.u_settings = UserSettings(user_id)
-    
-   async def run(self, message):
+
+    async def run(self, message):
         if self.gpt is None:
             await self.init_gpt()
             await self.show_stats()
@@ -141,7 +134,7 @@ class AgentMain:
         answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
         await answ_sw.switch(answer)
 
-   def save_settings(self, *args, **kwargs):
+    def save_settings(self, *args, **kwargs):
         logger.info("SAVE SETTINGS CALLED")
         logger.info(args[0]['settings'])
 
@@ -151,91 +144,89 @@ class AgentMain:
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
-   def settings(self, user_id):
-         """
-         Reads the contents of a settings file for a given user ID.
+    def settings(self, user_id):
+        """
+        Reads the contents of a settings file for a given user ID.
 
-         Args:
-            user_id: The user ID for whom to read settings.
+        Args:
+           user_id: The user ID for whom to read settings.
 
-         Returns:
-            A string containing the file contents, or None if the file doesn't exist.
-         """
-         logger.info(f"LOAD SETTINGS CALLED {self.user_id}")
+        Returns:
+           A string containing the file contents, or None if the file doesn't exist.
+        """
+        logger.info(f"LOAD SETTINGS CALLED {self.user_id}")
 
-      
-         return self.u_settings.load()
-          
+        return self.u_settings.load()
 
-   async def init_settings(self):
-      """
-      Initializes the user settings for a given user ID.
+    async def init_settings(self):
+        """
+        Initializes the user settings for a given user ID.
 
-      1. Put them to current context as user message
-      2. Put them to user state as `setting`
+        1. Put them to current context as user message
+        2. Put them to user state as `setting`
 
-      """
-      settigns = self.settings(self.user_id)
+        """
+        settigns = self.settings(self.user_id)
 
-      if settigns != "":
-         self.gpt.context.append({
-               "role": "user",
-               "content": "My preferences:\n" + settigns
-         })
+        if settigns != "":
+            self.gpt.context.append({
+                "role": "user",
+                "content": "My preferences:\n" + settigns
+            })
 
-         # Сохраним настройки в self.state
-         self.state['settings'] = self.settings_as_dict(settigns)
+            # Сохраним настройки в self.state
+            self.state['settings'] = self.settings_as_dict(settigns)
 
-         await self.message.answer("Settings:\n" + settigns)
+            await self.message.answer("Settings:\n" + settigns)
 
-   async def show_stats(self):
-      stats = ""
+    async def show_stats(self):
+        stats = ""
 
-      statsdict = UserScore(self.user_id).stats()
+        statsdict = UserScore(self.user_id).stats()
 
-      for param in statsdict:
-         value = statsdict[param]
-         stats += f"{param}: {value}\n"
+        for param in statsdict:
+            value = statsdict[param]
+            stats += f"{param}: {value}\n"
 
-      await self.message.answer(stats)
+        await self.message.answer(stats)
 
-      return stats
+        return stats
 
-   async def init_gpt(self):
-      self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
+    async def init_gpt(self):
+        self.gpt = FuncGPT(system=MAIN_INSTRUCTION)
 
-      await self.init_settings()
-        
-      self.gpt.add_func(
-          {
-             "type": "function",
-             "function": {
-                "name": "save_settings",
-                "description": "Save user settings for language learning",
-                "parameters": {
-                   "type": "object",
-                   "properties": {
-                         "settings": {
-                            "type": "string",
-                            "description": "Settings for language learning, as 4 strings: Native language, Studied language, Student level",
-                         },
-                   },
-                   "required": [ "settings" ],
+        await self.init_settings()
+
+        self.gpt.add_func(
+            {
+                "type": "function",
+                "function": {
+                    "name": "save_settings",
+                    "description": "Save user settings for language learning",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "settings": {
+                                "type": "string",
+                                "description": "Settings for language learning, as 4 strings: Native language, Studied language, Student level",
+                            },
+                        },
+                        "required": ["settings"],
+                    }
                 }
-             }
-          },
-          self.save_settings
-      )
-        
-   def settings_as_dict(self, settings: str) -> dict:
-      result = {}
+            },
+            self.save_settings
+        )
 
-      # Разбиваем текст на строки и обрабатываем каждую строку
-      for line in settings.strip().split('\n'):
-         # Разбиваем строку по символу ':'
-         key, value = line.split(':', 1)
+    def settings_as_dict(self, settings: str) -> dict:
+        result = {}
 
-         # Удаляем лишние пробелы и добавляем в словарь
-         result[key.strip()] = value.strip()
+        # Разбиваем текст на строки и обрабатываем каждую строку
+        for line in settings.strip().split('\n'):
+            # Разбиваем строку по символу ':'
+            key, value = line.split(':', 1)
 
-      return result
+            # Удаляем лишние пробелы и добавляем в словарь
+            result[key.strip()] = value.strip()
+
+        return result

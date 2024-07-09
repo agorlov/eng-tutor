@@ -16,4 +16,3 @@ class AnnaDB:
 
         db.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         return db
-        

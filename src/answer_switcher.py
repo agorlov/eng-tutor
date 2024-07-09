@@ -1,10 +1,10 @@
 import logging
-import asyncio
 from .state_switcher import StateSwitcher
 
 # Настраиваем логгер
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class AnswerSwitcher:
     """
@@ -29,26 +29,25 @@ class AnswerSwitcher:
         # print("!user_message: " + user_message)
         # print("!switch: " + user_message)
 
-
         if user_message:
             logger.info("!Answer to user: %s", user_message)
             await self.message.answer(user_message)
-        
+
         if switch_message:
             firstline = switch_message.splitlines()[0]
             assistant_name = firstline.split(maxsplit=1)[1]
-            
+
             # взять вторую и последующие строки ответа из answer
             task = switch_message.splitlines()[1:]
             task = '\n'.join(task)
-            
+
             logger.info("!Task to %s: %s", assistant_name, task)
             await self.switcher.switch(assistant_name, task)
 
     def split_message(self, str):
         """
         Разделяет строку на две части: user_message и switch_message.
-        
+
         Args:
             str: Строка, которую нужно разделить.
 
@@ -66,10 +65,9 @@ class AnswerSwitcher:
             4. Error: Where is the nearest airport?
             5. Error: I lost my luggage.
             6. Correct: Can you recommend a good restaurant?
-            7. Correct: Why don't we travel to the moon next holiday? 🚀        
+            7. Correct: Why don't we travel to the moon next holiday? 🚀
         """
 
-        user_message = None
         switch_message = None
 
         if "SWITCH" in str:
@@ -81,5 +79,4 @@ class AnswerSwitcher:
         else:
             user_message = str.strip()
 
-        return user_message, switch_message            
-                    
+        return user_message, switch_message

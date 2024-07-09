@@ -1,6 +1,4 @@
 import logging
-import asyncio
-from pprint import pprint
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
@@ -31,7 +29,7 @@ Your goal is to plan a learning session by selecting and providing phrases.
 1. With student - write text as usual.
 2. After the topic is chosen, simply write the command "SWITCH Teacher" and phrases for the lesson (see example below). This will switch the student to the "Teacher" agent and start the lesson.
 
-   
+
 ### Input Data
 
 - **Phrases for repetition**: (see below)
@@ -83,19 +81,20 @@ Phrases:
 
 """
 
+
 class AgentSessionPlanner:
     def __init__(self, message, state, user_id):
         self.message = message
         self.user_id = user_id
         self.state = state
         self._gpt = None
-    
+
     async def run(self, task):
         answer = self.gpt.chat(task)
 
         answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
         await answ_sw.switch(answer)
-    
+
     @property
     def gpt(self):
         if self._gpt is None:
