@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 class FuncGPT:
 
-    def __init__(self, system, model="gpt-4o", oai=None):
+    def __init__(self, system, model="gpt-4o-mini", oai=None):
         """
         Simple GPT client.
 
         Args:
             system: system prompt
-            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct            
+            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct
             oai: OpenAI instance
         """
 
@@ -34,14 +34,36 @@ class FuncGPT:
         self.funcs = {}
 
     def chat(self, message):
-
         self.context.append({"role": "user", "content": message})
-        resp = self.oai.chat.completions.create(
-            messages=self.context,
-            model=self.model,
-            tools=self.funcs_desc,
-            tool_choice="auto"
-        )
+        try:
+            resp = self.oai.chat.completions.create(
+                messages=self.context,
+                model=self.model,
+                tools=self.funcs_desc,
+                tool_choice="auto"
+            )
+            logger.info(f"API response: {resp}")
+        except Exception as e:
+            logger.error(f"API call failed: {e}", exc_info=True)
+            raise
+
+        if not resp.choices or not resp.choices[0].message.content:
+            logger.error("Received an empty or invalid response from the API")
+            self.context.append({"role": "user", "content": 'Я ничего не получил, скажи ученику, что настройки сохранены'})
+            try:
+                resp = self.oai.chat.completions.create(
+                    messages=self.context,
+                    model=self.model,
+                    tools=self.funcs_desc,
+                    tool_choice="auto"
+                )
+                logger.info(f"Retry response: {resp}")
+                if not resp.choices or not resp.choices[0].message.content:
+                    raise ValueError("API response is still empty or invalid")
+            except Exception as e:
+                logger.error(f"API call failed again: {e}")
+
+        response_content = resp.choices[0].message.content
 
         if resp.choices[0].message.tool_calls:
             func_name = resp.choices[0].message.tool_calls[0].function.name
@@ -49,18 +71,23 @@ class FuncGPT:
                 raise Exception(f"Unknown function: {func_name}")
 
             args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
-
             func = self.funcs[func_name]
             func_result = func(args)
 
             self.context.append({"role": "function", "name": func_name, "content": func_result})
 
-            follow_up = self.oai.chat.completions.create(
-                messages=self.context,
-                model=self.model,
-                tools=self.funcs_desc,
-                tool_choice="auto"
-            )
+            try:
+                follow_up = self.oai.chat.completions.create(
+                    messages=self.context,
+                    model=self.model,
+                    tools=self.funcs_desc,
+                    tool_choice="auto"
+                )
+                logger.info(f"Follow-up response: {follow_up}")
+                if not follow_up.choices or not follow_up.choices[0].message.content:
+                    raise ValueError("Follow-up API response is empty or invalid")
+            except Exception as e:
+                logger.error(f"Follow-up API call failed: {e}")
 
             final_output = follow_up.choices[0].message.content
             self.context.append({"role": "assistant", "content": final_output})

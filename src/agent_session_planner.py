@@ -105,10 +105,16 @@ class AgentSessionPlanner:
         return self._gpt
 
     def prompt(self):
+        settings = self.state.get('settings', {})
+        if 'Native language' not in settings:
+            logger.warning("Missing 'Native language' in settings")
+        if 'Studied language' not in settings:
+            logger.warning("Missing 'Studied language' in settings")
+
         repetition = PhrasesRepetition(
             self.user_id,
-            native_lang=self.state['settings']['Native language'],
-            studied_lang=self.state['settings']['Studied language']
+            native_lang=settings.get('Native language', 'default_native_language'),
+            studied_lang=settings.get('Studied language', 'default_studied_language')
         )
 
         phrases = repetition.phrases()

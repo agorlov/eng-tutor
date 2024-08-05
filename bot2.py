@@ -90,6 +90,8 @@ async def respond(message: Message):
     user_id = message.chat.id
     username = message.from_user.username
 
+    #init_user_context(message, user_id)
+
     #  Обработка голоса
     if message.content_type == types.ContentType.VOICE:
         agent = user_context[user_id]['agent']
@@ -102,11 +104,10 @@ async def respond(message: Message):
 
             init_user_context(audio_answer, user_id)
 
-            agent = user_context[user_id]['agent']
             await agent.run(audio_answer)
 
     #  Обработка текста
-    if message.content_type == types.ContentType.TEXT:
+    elif message.content_type == types.ContentType.TEXT:
         logging.info(f"[Text] Rcv {user_id}: {message.text}")
         init_user_context(message, user_id)
 
