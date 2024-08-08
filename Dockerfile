@@ -6,10 +6,10 @@ WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 # git+https://github.com/agorlov/whispercpp.py - wispercpp binding
-RUN pip install pyTelegramBotAPI psycopg2 python-dateutil faster-whisper openai traceback_with_variables aiogram asyncio
+RUN pip install pyTelegramBotAPI psycopg2 python-dateutil openai aiogram asyncio aiohttp pydub yandex-speechkit inflect
 
 # Install cron
-RUN apt-get update && apt-get -y install cron
+RUN apt-get update && apt-get -y install cron ffmpeg
 
 COPY cronjob /etc/cron.d/cronjob
 

@@ -5,10 +5,12 @@ from .anna_db import AnnaDB
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class UserScore:
     """
     Скор пользователя
     """
+
     def __init__(self, user_id, db=None):
         self.user_id = user_id
         if db is None:
@@ -50,19 +52,19 @@ class UserScore:
         cursor.close()
 
         if result:
-            return { 
+            return {
                 'phrases_count': result[0],
                 'total_repetitions': result[1],
                 'success_repetitions': result[2],
                 'phrases_learned': result[3]
-            } 
+            }
         else:
-            return { 
+            return {
                 'phrases_count': 0,
                 'total_repetitions': 0,
                 'success_repetitions': 0,
                 'phrases_learned': 0
-            } 
+            }
 
     def user_score(self):
         """
@@ -78,7 +80,8 @@ class UserScore:
             return result[0]
         else:
             return 0  # Default score if user not found
-        
+
+
 if __name__ == '__main__':
     UserScore(user_id=1).update_score(15)
     UserScore(user_id=1).update_score(15)

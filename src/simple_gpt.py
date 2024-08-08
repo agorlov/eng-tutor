@@ -1,6 +1,7 @@
 from openai import OpenAI
 from config import OPENAI_API_KEY, OPENAI_API_BASEURL
 
+
 class SimpleGPT:
 
     def __init__(self, system, model="gpt-4o", oai=None):
@@ -14,7 +15,7 @@ class SimpleGPT:
         """
 
         self.model = model
-        self.context = [ 
+        self.context = [
             {"role": "system", "content": system}
         ]
 
@@ -35,7 +36,7 @@ class SimpleGPT:
         self.context.append({"role": "assistant", "content": resp.choices[0].message.content})
 
         return resp.choices[0].message.content
-    
+
     # вывести контекст для отладки без system, в виде диалога
     def debug(self):
         return "\n".join(
@@ -43,4 +44,4 @@ class SimpleGPT:
             for msg in self.context[1:]
         )
 
-    
+
