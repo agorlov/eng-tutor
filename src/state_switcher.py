@@ -1,26 +1,47 @@
-import logging
-from pprint import pprint
+from openai import OpenAI
+from config import OPENAI_API_KEY, OPENAI_API_BASEURL
 
-# Настраиваем логгер
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-class StateSwitcher:
+class SimpleGPT:
 
-    def __init__(self, state: dict):
-        self.state = state
+    def __init__(self, system, model="gpt-4o", oai=None):
+        """
+        Simple GPT client.
 
-    async def switch(self, assistant_name, message):
-        assistant_name = assistant_name.strip()
-        pprint(self.state)
-        logger.info("!Assistant: '%s'", assistant_name)
-        if assistant_name not in self.state['agents']:
-            logger.info("!StateSwitcher: Unknown assistant: %s", assistant_name)
-            raise Exception("Unknown assistant: " + assistant_name)
+        Args:
+            system: system prompt
+            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct
+            oai: OpenAI instance
+        """
 
-        logger.info("!StateSwitcher: Switching to %s", assistant_name)
+        self.model = model
+        self.context = [
+            {"role": "system", "content": system}
+        ]
 
-        self.state['agent'] = self.state['agents'][assistant_name]
+        if oai is None:
+            self.oai = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASEURL)
+        else:
+            self.oai = oai
 
-        if message:
-            await self.state['agent'].run(message)
+    def chat(self, message):
+
+        self.context.append({"role": "user", "content": message})
+
+        resp = self.oai.chat.completions.create(
+            messages=self.context,
+            model=self.model
+        )
+
+        self.context.append({"role": "assistant", "content": resp.choices[0].message.content})
+
+        return resp.choices[0].message.content
+
+    # вывести контекст для отладки без system, в виде диалога
+    def debug(self):
+        return "\n".join(
+            f"[{msg['role']}]" + msg["content"]
+            for msg in self.context[1:]
+        )
+
+

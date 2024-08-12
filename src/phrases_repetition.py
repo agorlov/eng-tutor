@@ -62,6 +62,7 @@ class PhrasesRepetition:
             AND native_lang = %s
             AND studied_lang = %s
             AND success_repetitions < 3
+            AND first_success_repetition = FALSE
             AND (
                    (success_repetitions = 0 AND NOW() - INTERVAL '1 day' > last_repeat)
                 OR (success_repetitions = 1 AND NOW() - INTERVAL '7 days' > last_repeat)

@@ -7,13 +7,14 @@ logger = logging.getLogger(__name__)
 
 class UserSaved:
     '''Данные о пользователи сохранены в базу данных'''
-    def __init__(self, db=None):
+    def __init__(self, user_id, db=None):
+        self.user_id = user_id
         if db is None:
             self.db = AnnaDB()
         else:
             self.db = db
 
-    def save_user(self, user_id, username):
+    def save_user(self, username):
         conn = self.db.db()
         cur = conn.cursor()
         conn.autocommit = True
@@ -24,6 +25,6 @@ class UserSaved:
                     VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
                     ON CONFLICT (telegram_id) DO UPDATE
                     SET lastmessage = CURRENT_TIMESTAMP;
-                ''', (user_id, username))
+                ''', (self.user_id, username))
         except Exception as e:
             logger.info("Error inserting data: %s", e)
