@@ -8,7 +8,7 @@ from speechkit import model_repository, configure_credentials, creds
 from speechkit.stt import AudioProcessingType
 
 from src.agent_teacher import AgentTeacher
-from config import TG_BOT_TOKEN, YANDEX_API
+from config import TG_BOT_TOKEN, YANDEX_API_stt
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -77,7 +77,7 @@ class Transcripted:
     async def transcription(self, audio_file_path, message):
         """Распознавание речи и обработка результата."""
         configure_credentials(
-            yandex_credentials=creds.YandexCredentials(api_key=YANDEX_API)
+            yandex_credentials=creds.YandexCredentials(api_key=YANDEX_API_stt)
         )
         try:
             self.result = self.model.transcribe_file(audio_file_path)

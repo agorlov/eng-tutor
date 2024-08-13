@@ -14,7 +14,7 @@ from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
 from src.user_saved import UserSaved
 from src.transcripted import Transcripted
-from src.user_settings_interface import router as interface_router, UserSettingsInterface
+from src.user_settings_handler import router as handler_router, UserSettingsHandler
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=TG_BOT_TOKEN)
 dp = Dispatcher()
 
-dp.include_router(interface_router)
+dp.include_router(handler_router)
 
 # Словарь для хранения контекста
 # user_id: { 'agent' : AgentMain, main_context: [], agents: {}, settings: {} }
@@ -46,7 +46,7 @@ def init_user_context(message: Message, user_id):
         'Main': AgentMain(message, user_context[user_id], user_id),
         'Translator': AgentTranslator(message, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(message, user_context[user_id], user_id),
-        'Teacher': AgentTeacher(message, user_context[user_id], user_id),
+        'Teacher': AgentTeacher(message, user_context[user_id], user_id, bot),
         'Archiver': AgentArchiver(message, user_context[user_id], user_id),
     }
 
@@ -59,7 +59,7 @@ def init_user_context(message: Message, user_id):
 async def start(message):
     user_id = message.from_user.id
     init_user_context(message, user_id)
-    user_settings_interface = UserSettingsInterface(user_id)
+    user_settings_handler = UserSettingsHandler(user_id)
 
     user_language = message.from_user.language_code
     logger.info("!User Language: %s", user_language)
@@ -76,7 +76,7 @@ async def start(message):
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
 
 Давай подберем для тебя настройки:
-        """, reply_markup=user_settings_interface.keyboard_settings())
+        """, reply_markup=user_settings_handler.keyboard_settings())
     else:
         await message.answer("""
 🎉 Hi! My name is Anna. 🌟
@@ -89,7 +89,7 @@ Here's how it will work:
 3. Need a translation? Just write: "Translate: your phrase or text", and I’ll come to the rescue! 📖
 
 Let's select the settings for you:
-        """, reply_markup=user_settings_interface.keyboard_settings())
+        """, reply_markup=user_settings_handler.keyboard_settings())
 
 @dp.message()
 async def respond(message: Message):
@@ -98,6 +98,7 @@ async def respond(message: Message):
     init_user_context(message, user_id)
     username = message.from_user.username
 
+    #  Объявление объектов
     transcripted = Transcripted(user_id, bot)
     user_saved = UserSaved(user_id)
 
