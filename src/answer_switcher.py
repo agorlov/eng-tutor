@@ -22,7 +22,6 @@ class AnswerSwitcher:
         Если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента,
         а если нет, то отправляем сообщение студенту
         """
-        logger.info("Switching with answer: %s", answer)
 
         user_message, switch_message = self.split_message(answer)
 
