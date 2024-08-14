@@ -37,7 +37,7 @@ Before the lesson begins, make sure you know the user's settings.
 What is their native language, what language do they usually write in,
 what language they want to learn, and what is their proficiency level in that language.
 
-If the user's settings are known, you can either practice or translate:
+If the user's settings are known, you can either practice:
 
 As soon as the user says they want to start a lesson, be sure to make sure you have custom settings.
 If they are not there, find them out from the user, as in the example above.
@@ -156,7 +156,7 @@ class AgentMain:
 
         self.u_settings.save(args[0]['settings'])
 
-        self.init_settings()
+        #self.init_settings()
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 

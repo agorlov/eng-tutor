@@ -11,4 +11,14 @@ DBCONN = {
 
 OPENAI_API_KEY = "sk-..."
 
-YANDEX_API = "...."
+
+
+# Yandex SpeechToText Toolkit token
+YANDEX_API_stt = "...."
+
+# Yandex TextToSpeech Toolkit IAM-token
+YANDEX_API_tts = "...."
+
+# Yandex catalog Identifier (folder id)
+YANDEX_catalog_Identifier = "...."
+

@@ -56,6 +56,14 @@ Phrases:
 5. [Phrase 5]
 6. [Phrase 6]
 7. [Phrase 7]
+Translated phrases:
+1. [Translated phrase 1]
+2. [Translated phrase 2]
+3. [Translated phrase 3]
+4. [Translated phrase 4]
+5. [Translated phrase 5]
+6. [Translated phrase 6]
+7. [Translated phrase 7]
 
 Example for Russian:
 
@@ -71,6 +79,14 @@ Phrases:
 5. Вчера был шторм.
 6. Очень сильный ветер.
 7. Весной бывают заморозки.
+Translated phrases:
+1. Today is sunny.
+2. What is the weather like today?
+3. It will be clear today.
+4. It will be rainy tomorrow.
+5. There was a storm yesterday.
+6. The wind is very strong.
+7. There are frosts in the spring.
 
 
 ### Limitations

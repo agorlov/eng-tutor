@@ -6,7 +6,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class StateSwitcher:
-
     def __init__(self, state: dict):
         self.state = state
 

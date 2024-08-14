@@ -4,7 +4,7 @@ from config import OPENAI_API_KEY, OPENAI_API_BASEURL
 
 class SimpleGPT:
 
-    def __init__(self, system, model="gpt-4o", oai=None):
+    def __init__(self, system, model="gpt-4o-mini", oai=None):
         """
         Simple GPT client.
 

@@ -14,7 +14,7 @@ router = Router(name=__name__)
 
 user_settings_dict = {}
 
-class UserSettingsInterface:
+class UserSettingsHandler:
     def __init__(self, user_id):
         self.user_id = user_id
         self.builder = InlineKeyboardBuilder()
@@ -38,63 +38,63 @@ class UserSettingsInterface:
 @router.callback_query(F.data == "change")
 async def change_settings(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_interface = UserSettingsInterface(user_id)
-    user_settings_dict[user_id] = user_settings_interface  # Сохраняем объект в словарь
+    user_settings_handler = UserSettingsHandler(user_id)
+    user_settings_dict[user_id] = user_settings_handler  # Сохраняем объект в словарь
 
     await callback_query.answer("Изменение настроек...")
     await callback_query.message.answer('Выбери свой родной язык',
-                                        reply_markup=user_settings_interface.generate_keyboard(
+                                        reply_markup=user_settings_handler.generate_keyboard(
                                             [("Русский", "ru"), ("Казахский", "kz"), ("Английский", "en")],
                                             "native_lang"))
 
 @router.callback_query(lambda call: call.data.startswith("native_lang_"))
 async def set_native_language(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_interface = user_settings_dict.get(user_id)  # Получаем объект из словаря
+    user_settings_handler = user_settings_dict.get(user_id)  # Получаем объект из словаря
 
-    if not user_settings_interface:
+    if not user_settings_handler:
         await callback_query.message.answer("Произошла ошибка. Попробуйте снова.")
         return
 
-    user_settings_interface.native_language = callback_query.data.split("_")[-1].capitalize()
-    logger.info("!!! native language: %s", user_settings_interface.native_language)
+    user_settings_handler.native_language = callback_query.data.split("_")[-1].capitalize()
+    logger.info("!!! native language: %s", user_settings_handler.native_language)
     await callback_query.message.answer('Выбери изучаемый язык',
-                                        reply_markup=user_settings_interface.generate_keyboard(
+                                        reply_markup=user_settings_handler.generate_keyboard(
                                             [("Английский", "en"), ("Русский", "ru"), ("Казахский", "kz")],
                                             "studied_lang"))
 
 @router.callback_query(lambda call: call.data.startswith("studied_lang_"))
 async def set_studied_language(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_interface = user_settings_dict.get(user_id)
+    user_settings_handler = user_settings_dict.get(user_id)
 
-    if not user_settings_interface:
+    if not user_settings_handler:
         await callback_query.message.answer("Произошла ошибка. Попробуйте снова.")
         return
 
-    user_settings_interface.studied_language = callback_query.data.split("_")[-1].capitalize()
-    logger.info("!!! studied language: %s", user_settings_interface.studied_language)
+    user_settings_handler.studied_language = callback_query.data.split("_")[-1].capitalize()
+    logger.info("!!! studied language: %s", user_settings_handler.studied_language)
     await callback_query.message.answer('Выбери уровень владения изучаемого языка',
-                                        reply_markup=user_settings_interface.generate_keyboard(
+                                        reply_markup=user_settings_handler.generate_keyboard(
                                             [("Начальный", "beginner"), ("Средний", "intermediate"),
                                              ("Профессионал", "pro")], "level"))
 
 @router.callback_query(lambda call: call.data.startswith("level_"))
 async def save_user_settings(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_interface = user_settings_dict.get(user_id)
+    user_settings_handler = user_settings_dict.get(user_id)
 
-    if not user_settings_interface:
+    if not user_settings_handler:
         await callback_query.message.answer("Произошла ошибка. Попробуйте снова.")
         return
 
-    user_settings_interface.studied_level = callback_query.data.split("_")[-1].capitalize()
-    logger.info("!!! studied level: %s", user_settings_interface.studied_level)
+    user_settings_handler.studied_level = callback_query.data.split("_")[-1].capitalize()
+    logger.info("!!! studied level: %s", user_settings_handler.studied_level)
     user_settings = UserSettings(user_id)
 
-    user_settings.save(f"""Native language: {user_settings_interface.native_language}
-Studied language: {user_settings_interface.studied_language}
-Student level: {user_settings_interface.studied_level}
+    user_settings.save(f"""Native language: {user_settings_handler.native_language}
+Studied language: {user_settings_handler.studied_language}
+Student level: {user_settings_handler.studied_level}
     """)
 
     await callback_query.message.answer("""
