@@ -32,9 +32,9 @@ If the student does not understand the pronunciation of the answer, you will be 
 2. Provide the phrases from the task for translation.
 3. Wait for the student's translation.
 4. If the translation is correct, confirm and provide the next phrase, be sure to add 'USER_SEND_CORRECT' to the beginning of your response.
-5. If the translation is incorrect provide the correct translation and ask the student to translate it again.
+5. If the translation is incorrect and also contains at the beginning '[Audio + %.2f%%]: ', in addition to the correct translation, give the student this same number instead of %.2f%%. And also ask him to translate correctly.
 6. If a student asks to voice the answer, return the following format: "CALL_VOICE_GENERATION: <Correct translation>"
-7. If you receive an answer with '[Audio]: ' at the beginning, this means that the answer was entered by voice input, and you need to be less strict with the grammar of such an answer, correcting the words (if there are no strong differences or they are not similar). As an example: you need the user to say 'Three', and you receive 'Free' or 'Tree' from the user, then you can say that this is what we need ('Three'). Or if the apostrophe (I'm) is missing, then you can also add it yourself and reduce the user's response. And always be sure to relay to the user the text you heard in the response message (including the corrected content after '[Audio]:')
+7. If you receive an answer with '[Audio + %.2f%%]: ' at the beginning, this means that the answer was entered by voice input. Always send the student what you heard in advance. And always be sure to relay to the user the text you heard in the response message (including the corrected content after '[Audio + %.2f%%]:')
 8. After the training session, praise the student and point out what to focus on. Mention how to more easily remember the spot where a mistake is made. You can use memory aids, provide a mnemonic rule if it's appropriate and one exists. However, the lesson summary should not exceed 60 words.
 9. Then switch to the Lesson Archiver agent using the "SWITCH Archiver" command and list phrases in format: (Correct;Phrase original;correct translation of the phrase).
 
@@ -73,14 +73,18 @@ class AgentTeacher:
         self.threshold = 0.65
 
     def compare_strings(self, string1, string2):
+        if string1.endswith('.'):
+            string1 = string1[:-1]
+        if string2.endswith('.'):
+            string2 = string2[:-1]
+
         similarity_ratio = SequenceMatcher(None, string1.lower(), string2.lower()).ratio()
         return similarity_ratio >= self.threshold, similarity_ratio
 
     async def run(self, task):
         if not self.phrases:
             phrases_section = task.split("Translated phrases:")[1]
-            lines = phrases_section.splitlines()
-            self.phrases = [line.split('. ', 1)[1].strip() for line in lines if line.strip()]
+            self.phrases = [line.split('. ', 1)[1].strip() for line in phrases_section.splitlines() if line.strip()]
             logger.info("!!!!! SELF.PHRASES: %s", self.phrases)
 
         current_phrase = self.phrases[self.current_phrase_index]
@@ -94,22 +98,32 @@ class AgentTeacher:
                 text = current_phrase
                 logger.info("Строка схожа на %.2f%%. Заменяем на: %s", similarity_ratio * 100, text)
             else:
-                logger.info("Строка не схожа достаточно: %.2f%%. Повторяем попытку.", similarity_ratio * 100)
+                await self.message.answer(f'Строка не схожа достаточно: {round(similarity_ratio * 100, 2)}%')
 
             answer = self.gpt.chat(f'[Audio]: {text}')
+
         else:
             answer = self.gpt.chat(task)
 
         if 'USER_SEND_CORRECT' in answer:
             if self.current_phrase_index < 6:
                 self.current_phrase_index += 1
+                logger.info("!!!!! SELF.INDEX COUNT PHRASE: %s", self.current_phrase_index)
             else:
                 self.current_phrase_index = 0
-            logger.info("Правильный ответ. Переход к следующей фразе: %s", self.phrases[self.current_phrase_index])
+                self.phrases = []
             answer = answer.split("USER_SEND_CORRECT")[1].strip()
 
-        answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
-        await answ_sw.switch(answer)
+        if "CALL_VOICE_GENERATION:" in answer:
+            text_to_voice = answer.split("CALL_VOICE_GENERATION:")[1].strip()
+            if text_to_voice:
+                await self.voice_generation.generate_and_send_voice(text_to_voice)
+            else:
+                logger.info("No text to generate voice for.")
+        else:
+            # Продолжение обычной обработки ответа
+            answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
+            await answ_sw.switch(answer)
 
     @property
     def gpt(self):

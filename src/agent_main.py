@@ -156,7 +156,7 @@ class AgentMain:
 
         self.u_settings.save(args[0]['settings'])
 
-        self.init_settings()
+        #self.init_settings()
 
         return "Настройки пользователя сохранены:\n " + args[0]['settings']
 
