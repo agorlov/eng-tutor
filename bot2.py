@@ -108,7 +108,7 @@ async def respond(message: Message):
         audio_file_path = await transcripted.download_file(message, agent)
 
         if audio_file_path:
-            audio_answer = await transcripted.transcription(audio_file_path, message)
+            audio_answer = f'[Audio]: {await transcripted.transcription(audio_file_path, message)}'
 
             logging.info(f"[Audio] Rcv {user_id}: {audio_answer}")
 
