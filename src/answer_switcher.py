@@ -22,7 +22,6 @@ class AnswerSwitcher:
         Если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента,
         а если нет, то отправляем сообщение студенту
         """
-        logger.info("Switching with answer: %s", answer)
 
         user_message, switch_message = self.split_message(answer)
 
@@ -68,6 +67,11 @@ class AnswerSwitcher:
             6. Correct: Can you recommend a good restaurant?
             7. Correct: Why don't we travel to the moon next holiday? 🚀
         """
+
+        # Проверка на None
+        if str is None:
+            logger.error("Received None instead of a string in split_message: %s", str)
+            return None, None
 
         switch_message = None
 

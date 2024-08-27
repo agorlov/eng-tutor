@@ -5,8 +5,10 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class UserSettings:
     '''Настройки пользователя сохранены в текстовый файл'''
+
     def __init__(self, user_id):
         self.user_id = user_id
 

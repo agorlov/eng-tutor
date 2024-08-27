@@ -61,6 +61,7 @@ class PhrasesSaved:
                 phrase_translated = phrase['phrase_translated'].strip()
                 correct = phrase['correct']
 
+
                 cursor.execute("""
                     SELECT id, total_repetitions, success_repetitions
                     FROM phrases
@@ -78,16 +79,22 @@ class PhrasesSaved:
                     if correct:
                         success_repetitions += 1
 
+                    first_success_repetition = False
+                    if total_repetitions == success_repetitions and total_repetitions > 0:
+                        first_success_repetition = True
+
                     cursor.execute("""
                         UPDATE phrases
                         SET total_repetitions = %s,
                             success_repetitions = %s,
-                            last_repeat = %s
+                            last_repeat = %s,
+                            first_success_repetition = %s
                         WHERE id = %s
-                        """, 
-                        (total_repetitions, success_repetitions, current_timestamp, phrase_id)
+                        """,
+                        (total_repetitions, success_repetitions, current_timestamp, first_success_repetition, phrase_id)
                     )
                 else:
+                    first_success_repetition = correct
                     logger.info("User ID: %s", self.user_id)
                     cursor.execute("""
                         INSERT INTO phrases (
@@ -99,15 +106,14 @@ class PhrasesSaved:
                             total_repetitions, 
                             success_repetitions,
                             first_repeat,
-                            last_repeat
-
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            last_repeat,
+                            first_success_repetition
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """,
-                        (self.user_id, self.native_lang, self.studied_lang, 
-                        phrase_orig, phrase_translated, 1, 1 if correct else 0, 
-                        current_timestamp, current_timestamp)
+                       (self.user_id, self.native_lang, self.studied_lang,
+                        phrase_orig, phrase_translated, 1, 1 if correct else 0,
+                        current_timestamp, current_timestamp, first_success_repetition)
                     )
-
 
 if __name__ == '__main__':
     phrases = [
