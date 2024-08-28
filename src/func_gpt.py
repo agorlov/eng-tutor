@@ -34,36 +34,18 @@ class FuncGPT:
         self.funcs = {}
 
     def chat(self, message):
-        self.context.append({"role": "user", "content": message})
-        try:
-            resp = self.oai.chat.completions.create(
-                messages=self.context,
-                model=self.model,
-                tools=self.funcs_desc,
-                tool_choice="auto"
-            )
-            logger.info(f"API response: {resp}")
-        except Exception as e:
-            logger.error(f"API call failed: {e}", exc_info=True)
-            raise
+        if message and isinstance(message, str):
+            self.context.append({"role": "user", "content": message})
+        else:
+            logger.error(f"Invalid user message: {message}")
+            return "Invalid message content."
 
-        if not resp.choices or not resp.choices[0].message.content:
-            logger.error("Received an empty or invalid response from the API")
-            self.context.append({"role": "user", "content": 'Я ничего не получил, скажи ученику, что настройки сохранены'})
-            try:
-                resp = self.oai.chat.completions.create(
-                    messages=self.context,
-                    model=self.model,
-                    tools=self.funcs_desc,
-                    tool_choice="auto"
-                )
-                logger.info(f"Retry response: {resp}")
-                if not resp.choices or not resp.choices[0].message.content:
-                    raise ValueError("API response is still empty or invalid")
-            except Exception as e:
-                logger.error(f"API call failed again: {e}")
-
-        response_content = resp.choices[0].message.content
+        resp = self.oai.chat.completions.create(
+            messages=self.context,
+            model=self.model,
+            tools=self.funcs_desc,
+            tool_choice="auto"
+        )
 
         if resp.choices[0].message.tool_calls:
             func_name = resp.choices[0].message.tool_calls[0].function.name
@@ -74,29 +56,36 @@ class FuncGPT:
             func = self.funcs[func_name]
             func_result = func(args)
 
-            self.context.append({"role": "function", "name": func_name, "content": func_result})
+            if func_result and isinstance(func_result, str):
+                self.context.append({"role": "function", "name": func_name, "content": func_result})
+            else:
+                logger.error(f"Invalid function result for {func_name}: {func_result}")
+                return "Invalid function result."
 
-            try:
-                follow_up = self.oai.chat.completions.create(
-                    messages=self.context,
-                    model=self.model,
-                    tools=self.funcs_desc,
-                    tool_choice="auto"
-                )
-                logger.info(f"Follow-up response: {follow_up}")
-                if not follow_up.choices or not follow_up.choices[0].message.content:
-                    raise ValueError("Follow-up API response is empty or invalid")
-            except Exception as e:
-                logger.error(f"Follow-up API call failed: {e}")
+            follow_up = self.oai.chat.completions.create(
+                messages=self.context,
+                model=self.model,
+                tools=self.funcs_desc,
+                tool_choice="auto"
+            )
 
             final_output = follow_up.choices[0].message.content
-            self.context.append({"role": "assistant", "content": final_output})
+            if final_output and isinstance(final_output, str):
+                self.context.append({"role": "assistant", "content": final_output})
+            else:
+                logger.error("Received invalid response from assistant.")
+                return "Invalid assistant response."
 
             return final_output
 
-        self.context.append({"role": "assistant", "content": resp.choices[0].message.content})
+        assistant_content = resp.choices[0].message.content
+        if assistant_content and isinstance(assistant_content, str):
+            self.context.append({"role": "assistant", "content": assistant_content})
+        else:
+            logger.error("Received invalid response from assistant.")
+            return "Invalid assistant response."
 
-        return resp.choices[0].message.content
+        return assistant_content
 
     # вывести контекст для отладки без system, в виде диалога
     def debug(self):
@@ -148,7 +137,3 @@ class FuncGPT:
             raise TypeError(f"Function {func} is not callable")
 
         self.funcs[descr['function']['name']] = func
-
-
-
-

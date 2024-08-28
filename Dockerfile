@@ -6,10 +6,12 @@ WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 # git+https://github.com/agorlov/whispercpp.py - wispercpp binding
-RUN pip install pyTelegramBotAPI psycopg2 python-dateutil openai aiogram asyncio aiohttp pydub yandex-speechkit inflect
+COPY requirements.txt .
+RUN pip install --timeout=300 -r requirements.txt
+
 
 # Install cron
-RUN apt-get update && apt-get -y install cron ffmpeg
+RUN apt-get update && apt-get -y install cron ffmpeg curl
 
 COPY cronjob /etc/cron.d/cronjob
 
@@ -28,6 +30,3 @@ RUN sed -i '/session    required     pam_loginuid.so/c\#session    required   pa
 
 # Run bot.py and cronjob
 CMD python bot2.py
-
-
-

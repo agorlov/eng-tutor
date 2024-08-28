@@ -10,5 +10,3 @@ DBCONN = {
 }
 
 OPENAI_API_KEY = "sk-..."
-
-YANDEX_API = "...."

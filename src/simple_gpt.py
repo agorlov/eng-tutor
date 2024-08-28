@@ -4,13 +4,13 @@ from config import OPENAI_API_KEY, OPENAI_API_BASEURL
 
 class SimpleGPT:
 
-    def __init__(self, system, model="gpt-4o", oai=None):
+    def __init__(self, system, model="gpt-4o-mini", oai=None):
         """
         Simple GPT client.
 
         Args:
             system: system prompt
-            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct            
+            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct
             oai: OpenAI instance
         """
 
@@ -43,5 +43,3 @@ class SimpleGPT:
             f"[{msg['role']}]" + msg["content"]
             for msg in self.context[1:]
         )
-
-

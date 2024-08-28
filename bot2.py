@@ -3,7 +3,9 @@ import asyncio
 
 from config import TG_BOT_TOKEN
 
-from aiogram import Bot, Dispatcher, types
+from faster_whisper import WhisperModel
+
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
@@ -13,18 +15,19 @@ from src.agent_session_planner import AgentSessionPlanner
 from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
 from src.user_saved import UserSaved
-from src.voice_handler import Voice_handler
+from src.transcripted import Transcripted
+from src.user_settings_ask import router as handler_router, UserSettingsAsk
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Создание образца класса
-user_saved = UserSaved()
-voice_handler = Voice_handler()
-
 bot = Bot(token=TG_BOT_TOKEN)
 dp = Dispatcher()
+
+whisper_model = WhisperModel("base", device="cpu", compute_type="int8")  # whisper: 'tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2'
+
+dp.include_router(handler_router)
 
 # Словарь для хранения контекста
 # user_id: { 'agent' : AgentMain, main_context: [], agents: {}, settings: {} }
@@ -47,7 +50,7 @@ def init_user_context(message: Message, user_id):
         'Main': AgentMain(message, user_context[user_id], user_id),
         'Translator': AgentTranslator(message, user_context[user_id], user_id),
         'Session Planner': AgentSessionPlanner(message, user_context[user_id], user_id),
-        'Teacher': AgentTeacher(message, user_context[user_id], user_id),
+        'Teacher': AgentTeacher(message, user_context[user_id], user_id, bot),
         'Archiver': AgentArchiver(message, user_context[user_id], user_id),
     }
 
@@ -58,6 +61,10 @@ def init_user_context(message: Message, user_id):
 # /start
 @dp.message(CommandStart())
 async def start(message):
+    user_id = message.from_user.id
+    init_user_context(message, user_id)
+    user_settings_ask = UserSettingsAsk(user_id)
+
     user_language = message.from_user.language_code
     logger.info("!User Language: %s", user_language)
 
@@ -71,7 +78,9 @@ async def start(message):
 1. Я буду предлагать фразы, а ты - переводить их и запоминать, это как игра, которая научит тебя формулировать мысли на английском!
 2. Если хочешь, можешь предложить свою тему для урока, и я с удовольствием поддержу. 📚
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
-        """)
+
+Давай подберем для тебя настройки:
+        """, reply_markup=user_settings_ask.keyboard_settings())
     else:
         await message.answer("""
 🎉 Hi! My name is Anna. 🌟
@@ -82,40 +91,50 @@ Here's how it will work:
 1. I will suggest phrases, and you will translate and memorize them. It's like a game that will teach you how to formulate thoughts in a foreign language!
 2. If you want, you can suggest your own topic for the lesson, and I will gladly support you. 📚
 3. Need a translation? Just write: "Translate: your phrase or text", and I’ll come to the rescue! 📖
-        """)
-
+ 
+Let's select the settings for you:
+        """, reply_markup=user_settings_ask.keyboard_settings())
 
 @dp.message()
 async def respond(message: Message):
     user_id = message.chat.id
+
+    init_user_context(message, user_id)
     username = message.from_user.username
 
-    #init_user_context(message, user_id)
+    #  Объявление объектов
+    transcripted = Transcripted(user_id, bot, whisper_model)
+    user_saved = UserSaved(user_id)
 
     #  Обработка голоса
     if message.content_type == types.ContentType.VOICE:
         agent = user_context[user_id]['agent']
-        audio_file_path = await voice_handler.download_file(user_id, message, bot, agent)
+
+        try:
+            lang = user_context[user_id]['settings']['Studied language']
+
+        except:
+            lang = None
+        audio_file_path = await transcripted.download_file(message, agent, lang)
 
         if audio_file_path:
-            audio_answer = await voice_handler.recognize(audio_file_path, message)
-
+            audio_answer = f'[Audio]: {await transcripted.transcription(audio_file_path, message)}'
             logging.info(f"[Audio] Rcv {user_id}: {audio_answer}")
 
             init_user_context(audio_answer, user_id)
 
+            agent = user_context[user_id]['agent']
             await agent.run(audio_answer)
 
-    #  Обработка текста
-    elif message.content_type == types.ContentType.TEXT:
+        #  Обработка текста
+    if message.content_type == types.ContentType.TEXT:
         logging.info(f"[Text] Rcv {user_id}: {message.text}")
         init_user_context(message, user_id)
 
         agent = user_context[user_id]['agent']
         await agent.run(message.text)
 
-    user_saved.save_user(user_id, username)
-
+    user_saved.save_user(username)
 
 async def main():
     await dp.start_polling(bot)
