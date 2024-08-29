@@ -15,6 +15,7 @@ router = Router(name=__name__)
 user_settings_dict = {}
 
 class UserSettingsAsk:
+    """Кнопки для выбора настроек пользователя"""
     def __init__(self, user_id):
         self.user_id = user_id
         self.builder = InlineKeyboardBuilder()

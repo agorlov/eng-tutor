@@ -70,7 +70,7 @@ class AnswerSwitcher:
 
         # Проверка на None
         if str is None:
-            logger.error("Received None instead of a string in split_message: %s", str)
+            logger.error("AnswerSwitcher->split_message(None): Received None instead of a text of GPT response")
             return None, None
 
         switch_message = None

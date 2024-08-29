@@ -58,9 +58,6 @@ class FuncGPT:
 
             if func_result and isinstance(func_result, str):
                 self.context.append({"role": "function", "name": func_name, "content": func_result})
-            else:
-                logger.error(f"Invalid function result for {func_name}: {func_result}")
-                return "Invalid function result."
 
             follow_up = self.oai.chat.completions.create(
                 messages=self.context,
@@ -73,7 +70,7 @@ class FuncGPT:
             if final_output and isinstance(final_output, str):
                 self.context.append({"role": "assistant", "content": final_output})
             else:
-                logger.error("Received invalid response from assistant.")
+                logger.error("FuncGPT: Received invalid response from assistant.")
                 return "Invalid assistant response."
 
             return final_output
@@ -81,9 +78,6 @@ class FuncGPT:
         assistant_content = resp.choices[0].message.content
         if assistant_content and isinstance(assistant_content, str):
             self.context.append({"role": "assistant", "content": assistant_content})
-        else:
-            logger.error("Received invalid response from assistant.")
-            return "Invalid assistant response."
 
         return assistant_content
 

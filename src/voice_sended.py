@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class VoiceSended:
+    """Озвучен правльный ответ во время урока"""
     def __init__(self, user_id, bot):
         self.user_id = user_id
         self.bot = bot

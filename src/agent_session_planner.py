@@ -125,8 +125,8 @@ class AgentSessionPlanner:
                 self.user_id,
                 native_lang=self.state['settings']['Native language'],
                 studied_lang=self.state['settings']['Studied language'])
-        except:
-            logger.error("!!! Missing required settings: Native language or Studied language. !!!")
+        except Exception as e:
+            logger.error(f"!!! Missing required settings: Native language or Studied language. !!!\nError msg: {str(e)}")
             repetition = PhrasesRepetition(
                 self.user_id,
                 native_lang='Ru',
