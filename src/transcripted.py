@@ -81,7 +81,7 @@ class Transcripted:
         except Exception as e:
             logging.error(f"Error during ffmpeg conversion: {e}")
             return False
-
+          
     def replace_numbers_with_text(self, text):
         """Замена чисел в тексте на текстовые представления."""
         return re.sub(r'\d+', self._number_to_words, text)

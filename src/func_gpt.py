@@ -53,6 +53,7 @@ class FuncGPT:
                 raise Exception(f"Unknown function: {func_name}")
 
             args = json.loads(resp.choices[0].message.tool_calls[0].function.arguments)
+
             func = self.funcs[func_name]
             func_result = func(args)
 

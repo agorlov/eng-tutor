@@ -9,6 +9,7 @@ CREATE TABLE phrases (
     translation TEXT NOT NULL,
     total_repetitions INTEGER DEFAULT 0,
     success_repetitions INTEGER DEFAULT 0,
+    first_success_repetition BOOLEAN DEFAULT FALSE,
     first_repeat TIMESTAMP WITH TIME ZONE,
     last_repeat TIMESTAMP WITH TIME ZONE
 );

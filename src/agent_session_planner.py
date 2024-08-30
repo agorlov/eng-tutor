@@ -132,7 +132,6 @@ class AgentSessionPlanner:
                 native_lang='Ru',
                 studied_lang='En')
 
-
         phrases = repetition.phrases()
         if not phrases:
             logger.error("PhrasesRepetition returned None or empty list")

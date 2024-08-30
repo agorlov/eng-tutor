@@ -6,9 +6,9 @@ WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 # git+https://github.com/agorlov/whispercpp.py - wispercpp binding
+
 COPY requirements.txt .
 RUN pip install --timeout=300 -r requirements.txt
-
 
 # Install cron
 RUN apt-get update && apt-get -y install cron ffmpeg curl

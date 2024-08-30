@@ -18,6 +18,7 @@ from src.user_saved import UserSaved
 from src.transcripted import Transcripted
 from src.user_settings_ask import router as handler_router, UserSettingsAsk
 
+
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ async def respond(message: Message):
             agent = user_context[user_id]['agent']
             await agent.run(audio_answer)
 
-        #  Обработка текста
+    #  Обработка текста
     if message.content_type == types.ContentType.TEXT:
         logging.info(f"[Text] Rcv {user_id}: {message.text}")
         init_user_context(message, user_id)
