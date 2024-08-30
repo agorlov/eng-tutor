@@ -126,6 +126,7 @@ class AgentTeacher:
             answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
             await answ_sw.switch(answer)
 
+
     @property
     def gpt(self):
         if self._gpt is None:
