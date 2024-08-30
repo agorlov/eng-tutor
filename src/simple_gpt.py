@@ -10,7 +10,7 @@ class SimpleGPT:
 
         Args:
             system: system prompt
-            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct            
+            model: "gpt-3.5-turbo-0613", "gpt-3.5-turbo"  gpt-3.5-turbo-instruct
             oai: OpenAI instance
         """
 
@@ -43,5 +43,3 @@ class SimpleGPT:
             f"[{msg['role']}]" + msg["content"]
             for msg in self.context[1:]
         )
-
-

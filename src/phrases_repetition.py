@@ -53,7 +53,7 @@ class PhrasesRepetition:
 
         """
         current_timestamp = datetime.now()
-        cursor = self.db.db().cursor()   
+        cursor = self.db.db().cursor()
 
         cursor.execute("""
             SELECT phrase

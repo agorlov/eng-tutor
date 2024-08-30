@@ -88,4 +88,3 @@ if __name__ == '__main__':
     logger.info("User 1 score: %s", UserScore(user_id=1).user_score())
 
     logger.info("Stats for user 425709869: %s", UserScore(user_id=425709869).stats())
-

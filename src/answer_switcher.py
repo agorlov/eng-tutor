@@ -68,6 +68,11 @@ class AnswerSwitcher:
             7. Correct: Why don't we travel to the moon next holiday? 🚀
         """
 
+        # Проверка на None
+        if str is None:
+            logger.error("AnswerSwitcher->split_message(None): Received None instead of a text of GPT response")
+            return None, None
+
         switch_message = None
 
         if "SWITCH" in str:

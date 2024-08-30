@@ -34,8 +34,12 @@ class FuncGPT:
         self.funcs = {}
 
     def chat(self, message):
+        if message and isinstance(message, str):
+            self.context.append({"role": "user", "content": message})
+        else:
+            logger.error(f"Invalid user message: {message}")
+            return "Invalid message content."
 
-        self.context.append({"role": "user", "content": message})
         resp = self.oai.chat.completions.create(
             messages=self.context,
             model=self.model,
@@ -53,7 +57,8 @@ class FuncGPT:
             func = self.funcs[func_name]
             func_result = func(args)
 
-            self.context.append({"role": "function", "name": func_name, "content": func_result})
+            if func_result and isinstance(func_result, str):
+                self.context.append({"role": "function", "name": func_name, "content": func_result})
 
             follow_up = self.oai.chat.completions.create(
                 messages=self.context,
@@ -63,13 +68,19 @@ class FuncGPT:
             )
 
             final_output = follow_up.choices[0].message.content
-            self.context.append({"role": "assistant", "content": final_output})
+            if final_output and isinstance(final_output, str):
+                self.context.append({"role": "assistant", "content": final_output})
+            else:
+                logger.error("FuncGPT: Received invalid response from assistant.")
+                return "Invalid assistant response."
 
             return final_output
 
-        self.context.append({"role": "assistant", "content": resp.choices[0].message.content})
+        assistant_content = resp.choices[0].message.content
+        if assistant_content and isinstance(assistant_content, str):
+            self.context.append({"role": "assistant", "content": assistant_content})
 
-        return resp.choices[0].message.content
+        return assistant_content
 
     # вывести контекст для отладки без system, в виде диалога
     def debug(self):
@@ -121,7 +132,3 @@ class FuncGPT:
             raise TypeError(f"Function {func} is not callable")
 
         self.funcs[descr['function']['name']] = func
-
-
-
-

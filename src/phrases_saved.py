@@ -94,7 +94,6 @@ class PhrasesSaved:
                         (total_repetitions, success_repetitions, current_timestamp, first_success_repetition, phrase_id)
                     )
                 else:
-
                     first_success_repetition = correct
                     logger.info("User ID: %s", self.user_id)
                     cursor.execute("""
@@ -111,11 +110,10 @@ class PhrasesSaved:
                             first_success_repetition
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """,
-                        (self.user_id, self.native_lang, self.studied_lang,
+                       (self.user_id, self.native_lang, self.studied_lang,
                         phrase_orig, phrase_translated, 1, 1 if correct else 0,
                         current_timestamp, current_timestamp, first_success_repetition)
                     )
-
 
 if __name__ == '__main__':
     phrases = [

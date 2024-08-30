@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 
 from .simple_gpt import SimpleGPT
 from .answer_switcher import AnswerSwitcher
-from .voice_generator import VoiceGenerator
+from .voice_sended import VoiceSended
 
 # Настраиваем логгер
 logging.basicConfig(level=logging.INFO)
@@ -66,7 +66,7 @@ class AgentTeacher:
         self.state = state
         self.user_id = user_id
         self.bot = bot
-        self.voice_generation = VoiceGenerator(self.user_id, self.bot)
+        self.voice_sended = VoiceSended(self.user_id, self.bot)
         self._gpt = None
         self.phrases = []
         self.current_phrase_index = 0
@@ -94,13 +94,15 @@ class AgentTeacher:
             logger.info("!!!!! TEXT: %s", text)
 
             is_similar, similarity_ratio = self.compare_strings(text, current_phrase)
+            similarity_percentage = round(similarity_ratio * 100, 2)
             if is_similar:
                 text = current_phrase
-                logger.info("Строка схожа на %.2f%%. Заменяем на: %s", similarity_ratio * 100, text)
+                logger.info("Строка схожа на %.2f%%. Заменяем на: %s", similarity_percentage, text)
             else:
-                await self.message.answer(f'Строка не схожа достаточно: {round(similarity_ratio * 100, 2)}%')
+                await self.message.answer(f'Строка не схожа достаточно: {similarity_percentage}%')
 
-            answer = self.gpt.chat(f'[Audio]: {text}')
+            # Обратите внимание на этот блок:
+            answer = self.gpt.chat(f'[Audio + {similarity_percentage}%]: {text}')
 
         else:
             answer = self.gpt.chat(task)
@@ -117,13 +119,13 @@ class AgentTeacher:
         if "CALL_VOICE_GENERATION:" in answer:
             text_to_voice = answer.split("CALL_VOICE_GENERATION:")[1].strip()
             if text_to_voice:
-                await self.voice_generation.generate_and_send_voice(text_to_voice)
+                await self.voice_sended.generate_and_send_voice(text_to_voice)
             else:
                 logger.info("No text to generate voice for.")
         else:
-            # Продолжение обычной обработки ответа
             answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
             await answ_sw.switch(answer)
+
 
     @property
     def gpt(self):

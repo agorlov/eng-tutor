@@ -3,6 +3,8 @@ import asyncio
 
 from config import TG_BOT_TOKEN
 
+from faster_whisper import WhisperModel
+
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
@@ -14,7 +16,8 @@ from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
 from src.user_saved import UserSaved
 from src.transcripted import Transcripted
-from src.user_settings_handler import router as handler_router, UserSettingsHandler
+from src.user_settings_ask import router as handler_router, UserSettingsAsk
+
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 bot = Bot(token=TG_BOT_TOKEN)
 dp = Dispatcher()
+
+whisper_model = WhisperModel("base", device="cpu", compute_type="int8")  # whisper: 'tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2'
 
 dp.include_router(handler_router)
 
@@ -59,7 +64,7 @@ def init_user_context(message: Message, user_id):
 async def start(message):
     user_id = message.from_user.id
     init_user_context(message, user_id)
-    user_settings_handler = UserSettingsHandler(user_id)
+    user_settings_ask = UserSettingsAsk(user_id)
 
     user_language = message.from_user.language_code
     logger.info("!User Language: %s", user_language)
@@ -76,7 +81,7 @@ async def start(message):
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
 
 Давай подберем для тебя настройки:
-        """, reply_markup=user_settings_handler.keyboard_settings())
+        """, reply_markup=user_settings_ask.keyboard_settings())
     else:
         await message.answer("""
 🎉 Hi! My name is Anna. 🌟
@@ -87,9 +92,9 @@ Here's how it will work:
 1. I will suggest phrases, and you will translate and memorize them. It's like a game that will teach you how to formulate thoughts in a foreign language!
 2. If you want, you can suggest your own topic for the lesson, and I will gladly support you. 📚
 3. Need a translation? Just write: "Translate: your phrase or text", and I’ll come to the rescue! 📖
-
+ 
 Let's select the settings for you:
-        """, reply_markup=user_settings_handler.keyboard_settings())
+        """, reply_markup=user_settings_ask.keyboard_settings())
 
 @dp.message()
 async def respond(message: Message):
@@ -99,17 +104,22 @@ async def respond(message: Message):
     username = message.from_user.username
 
     #  Объявление объектов
-    transcripted = Transcripted(user_id, bot)
+    transcripted = Transcripted(user_id, bot, whisper_model)
     user_saved = UserSaved(user_id)
 
     #  Обработка голоса
     if message.content_type == types.ContentType.VOICE:
         agent = user_context[user_id]['agent']
-        audio_file_path = await transcripted.download_file(message, agent)
+
+        try:
+            lang = user_context[user_id]['settings']['Studied language']
+
+        except:
+            lang = None
+        audio_file_path = await transcripted.download_file(message, agent, lang)
 
         if audio_file_path:
             audio_answer = f'[Audio]: {await transcripted.transcription(audio_file_path, message)}'
-
             logging.info(f"[Audio] Rcv {user_id}: {audio_answer}")
 
             init_user_context(audio_answer, user_id)
@@ -126,7 +136,6 @@ async def respond(message: Message):
         await agent.run(message.text)
 
     user_saved.save_user(username)
-
 
 async def main():
     await dp.start_polling(bot)

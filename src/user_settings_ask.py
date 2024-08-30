@@ -14,7 +14,8 @@ router = Router(name=__name__)
 
 user_settings_dict = {}
 
-class UserSettingsHandler:
+class UserSettingsAsk:
+    """Кнопки для выбора настроек пользователя"""
     def __init__(self, user_id):
         self.user_id = user_id
         self.builder = InlineKeyboardBuilder()
@@ -38,7 +39,7 @@ class UserSettingsHandler:
 @router.callback_query(F.data == "change")
 async def change_settings(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_handler = UserSettingsHandler(user_id)
+    user_settings_handler = UserSettingsAsk(user_id)
     user_settings_dict[user_id] = user_settings_handler  # Сохраняем объект в словарь
 
     await callback_query.answer("Изменение настроек...")
@@ -83,7 +84,6 @@ async def set_studied_language(callback_query: CallbackQuery):
 async def save_user_settings(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     user_settings_handler = user_settings_dict.get(user_id)
-
     if not user_settings_handler:
         await callback_query.message.answer("Произошла ошибка. Попробуйте снова.")
         return
@@ -93,20 +93,21 @@ async def save_user_settings(callback_query: CallbackQuery):
     user_settings = UserSettings(user_id)
 
     user_settings.save(f"""Native language: {user_settings_handler.native_language}
-Studied language: {user_settings_handler.studied_language}
-Student level: {user_settings_handler.studied_level}
-    """)
+    Studied language: {user_settings_handler.studied_language}
+    Student level: {user_settings_handler.studied_level}
+        """)
 
     await callback_query.message.answer("""
-🎉 Настройки сохранены! 🌟
+    🎉 Настройки сохранены! 🌟
 
-Отлично, теперь всё готово для эффективного обучения. 😊
+    Отлично, теперь всё готово для эффективного обучения. 😊
 
-Что ты хочешь сделать дальше?
+    Что ты хочешь сделать дальше?
 
-Хочешь продолжить обучение? Давай начнем! 📚
-Есть вопросы или нужна помощь? Я всегда на связи, просто напиши! 📝
-    """)
+    Хочешь продолжить обучение? Давай начнем! 📚
+    Есть вопросы или нужна помощь? Я всегда на связи, просто напиши! 📝
+        """)
+
 
 @router.callback_query(F.data == "delete")
 async def delete_settings(callback_query: CallbackQuery):

@@ -22,8 +22,8 @@ Once you learn the topic from a student, you automatically switch to a teacher a
 
 Your goal is to plan a learning session by selecting and providing phrases.
 
-1. **Choose a topic for the lesson.** Suggest three lesson topics of the student's choice. Also say that the student can suggest a topic for the lesson.
-2. **Provide seven phrases**: mix new phrases with those for repetition. The first three phrases are for repetition. Phrases must be without translation. Student will translate the phrases.
+1. Choose a topic for the lesson. Suggest three lesson topics of the student's choice. Also say that the student can suggest a topic for the lesson.
+2. Provide seven phrases: mix new phrases with those for repetition. The first three phrases are for repetition. Phrases must be without translation. Student will translate the phrases.
 
 1. With student - write text as usual.
 2. After the topic is chosen, simply write the command "SWITCH Teacher" and phrases for the lesson (see example below). This will switch the student to the "Teacher" agent and start the lesson.
@@ -31,8 +31,8 @@ Your goal is to plan a learning session by selecting and providing phrases.
 
 ### Input Data
 
-- **Phrases for repetition**: (see below)
-- **Student difficulty level**
+- Phrases for repetition: (see below)
+- Student difficulty level
 
 ### Phrases for repetition
 
@@ -125,31 +125,28 @@ class AgentSessionPlanner:
                 self.user_id,
                 native_lang=self.state['settings']['Native language'],
                 studied_lang=self.state['settings']['Studied language'])
-        except:
-            logger.error("!!! Missing required settings: Native language or Studied language. !!!")
+        except Exception as e:
+            logger.error(f"!!! Missing required settings: Native language or Studied language. !!!\nError msg: {str(e)}")
             repetition = PhrasesRepetition(
                 self.user_id,
-                native_lang='Russian',
-                studied_lang='English')
-
+                native_lang='Ru',
+                studied_lang='En')
 
         phrases = repetition.phrases()
         if not phrases:
             logger.error("PhrasesRepetition returned None or empty list")
             phrases = []  # Инициализируем пустым списком для избежания ошибки
+            formatted_phrases = "\n".join(repetition.phrases())
+            logger.info("!Formatted phrases: %s", formatted_phrases)
 
-        # Форматирование списка фраз для подстановки в промпт
-        formatted_phrases = "\n".join(repetition.phrases())
-        logger.info("!Formatted phrases: %s", formatted_phrases)
+            # Случайный вариант направления перевода
+            direction = [
+                "Suggest phrases in the user's native language for translation into the foreign language.",
+                "Suggest phrases in the foreign language for translation into the user's native language."
+            ]
 
-        # Случайный вариант направления перевода
-        direction = [
-            "Suggest phrases in the user's native language for translation into the foreign language.",
-            "Suggest phrases in the foreign language for translation into the user's native language."
-        ]
-
-        # Подстановка значений в промпт
-        return SESSION_PLANNER_INSTRUCTION.format(
-            PHRASES_FOR_REPETITION=formatted_phrases,
-            TRANSLATE_DIRECTION=random.choice(direction)
-        )
+            # Подстановка значений в промпт
+            return SESSION_PLANNER_INSTRUCTION.format(
+                PHRASES_FOR_REPETITION=formatted_phrases,
+                TRANSLATE_DIRECTION=random.choice(direction)
+            )

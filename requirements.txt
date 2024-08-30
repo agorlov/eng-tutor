@@ -1,0 +1,8 @@
+asyncio
+aiogram
+faster_whisper
+psycopg2
+openai
+inflect
+aiohttp
+TTS

@@ -5,5 +5,5 @@ tmp/
 *.bin
 app.log
 data/settings/
-/venv/
 /.idea/
+/.venv/

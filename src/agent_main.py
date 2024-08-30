@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 # When the learner greets you, present the following options:
 
-# - **Learning Session:** Propose starting a learning session.
-# - **Text Translation:** Offer to translate any text they provide.
+# - Learning Session: Propose starting a learning session.
+# - Text Translation: Offer to translate any text they provide.
 
 # If you don't know the settings, ask the user. And then save the settings by calling SWITCH Save Settings.
 # Skill to be practiced: translation from Russian to English
@@ -69,17 +69,16 @@ Student level: [level]
 
 #### Your Assistants
 
-1. **Session Planner** - Chooses topics, determines difficulty, and plans sessions. `assistant_name="Session Planner"`
-2. **Translator** - Assists in translating texts. `assistant_name="Translator"`
+1. Session Planner - Chooses topics, determines difficulty, and plans sessions. assistant_name="Session Planner"
+2. Translator - Assists in translating texts. assistant_name="Translator"
 
 #### Assistants Switching
 
-1. **Initiating Learning:**
+1. Initiating Learning:
     - When the user expresses a desire to start training, find out if the user’s settings are in the correct format. If it already exists, it automatically switches to the Session Planner without asking for confirmation.
     - Be sure to understand the student's native language, the level of proficiency in the language they want to learn, and the language they want to learn before switching to the Session Planner. But don't switch right away. You can switch only with the next message as soon as the file with settings is ready and can be transferred to the Session Planner.
     - Provide the session planner with information about your native and desired language, as well as your level of language proficiency.
-
-2. **Text Translation:**
+2. Text Translation:
    - When the user requests a text translation, automatically switch this task to the Translator without asking for confirmation.
    - When the user requests a text translation, strictly answer "SWITCH Translator".
    - Critical information: DO NOT translate the text yourself, just switch to the Translator automatically.
@@ -103,31 +102,23 @@ Student level: [level]
 
 ### Greeting and Options
 
-```
 Hello! What language are you learning today? 😊
-```
 
-```
 Hi there! Would you like to start a learning session? 🌟
-```
 
 ### Switching to Session Planner
 
-```
 SWITCH Session Planner
 Plan session for student with native language "English" and desired language "Russian"
 Student level is "intermediate", talk to student in his native language: Russian
-```
 
 In this case we know the student's native language and the language they want to learn.
 
 
 ### Switching to Translator
 
-```
 SWITCH Translator
 На английский: Здравствуй!
-```
 
 """
 
@@ -179,31 +170,34 @@ class AgentMain:
         Initializes the user settings for a given user ID.
 
         1. Put them to current context as user message
-        2. Put them to user state as `setting`
+        2. Put them to user state as setting
 
         """
         try:
-            settigns = self.load_settings()
+            settings = self.load_settings()
 
-            if settigns != "":
+            if settings:
                 self.gpt.context.append({
                     "role": "user",
-                    "content": "My preferences:\n" + settigns
+                    "content": "My preferences:\n" + settings
                 })
                 # Сохраним настройки в self.state
-                self.state['settings'] = self.settings_as_dict(settigns)
-                await self.message.answer("Settings:\n" + settigns)
+                self.state['settings'] = self.settings_as_dict(settings)
+                await self.message.answer("Settings:\n" + settings)
+            else:
+                await self.message.answer("Настройки не найдены. Создадим новые...")
 
         except ValueError as e:
             logger.error(f"ERROR READING SETTINGS FILE: {e}")
             self.u_settings.delete()
             await self.message.answer("Файл настроек был поврежден и его пришлось удалить. Сейчас создадим новый...")
+
         except FileNotFoundError:
             logger.error("Файл настроек не найден.")
             try:
                 self.u_settings.delete()
-            except:
-                pass
+            except Exception as e:
+                logger.error(f"Ошибка при удалении файла настроек: {e}")
             await self.message.answer("Файл настроек не найден. Сейчас создадим новый...")
 
     async def show_stats(self):
