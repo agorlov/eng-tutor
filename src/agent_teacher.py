@@ -94,13 +94,15 @@ class AgentTeacher:
             logger.info("!!!!! TEXT: %s", text)
 
             is_similar, similarity_ratio = self.compare_strings(text, current_phrase)
+            similarity_percentage = round(similarity_ratio * 100, 2)
             if is_similar:
                 text = current_phrase
-                logger.info("Строка схожа на %.2f%%. Заменяем на: %s", similarity_ratio * 100, text)
+                logger.info("Строка схожа на %.2f%%. Заменяем на: %s", similarity_percentage, text)
             else:
-                await self.message.answer(f'Строка не схожа достаточно: {round(similarity_ratio * 100, 2)}%')
+                await self.message.answer(f'Строка не схожа достаточно: {similarity_percentage}%')
 
-            answer = self.gpt.chat(f'[Audio]: {text}')
+            # Обратите внимание на этот блок:
+            answer = self.gpt.chat(f'[Audio + {similarity_percentage}%]: {text}')
 
         else:
             answer = self.gpt.chat(task)
@@ -121,9 +123,9 @@ class AgentTeacher:
             else:
                 logger.info("No text to generate voice for.")
         else:
-            # Продолжение обычной обработки ответа
             answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
             await answ_sw.switch(answer)
+
 
     @property
     def gpt(self):

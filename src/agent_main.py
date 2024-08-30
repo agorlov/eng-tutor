@@ -174,27 +174,30 @@ class AgentMain:
 
         """
         try:
-            settigns = self.load_settings()
+            settings = self.load_settings()
 
-            if settigns != "":
+            if settings:
                 self.gpt.context.append({
                     "role": "user",
-                    "content": "My preferences:\n" + settigns
+                    "content": "My preferences:\n" + settings
                 })
                 # Сохраним настройки в self.state
-                self.state['settings'] = self.settings_as_dict(settigns)
-                await self.message.answer("Settings:\n" + settigns)
+                self.state['settings'] = self.settings_as_dict(settings)
+                await self.message.answer("Settings:\n" + settings)
+            else:
+                await self.message.answer("Настройки не найдены. Создадим новые...")
 
         except ValueError as e:
             logger.error(f"ERROR READING SETTINGS FILE: {e}")
             self.u_settings.delete()
             await self.message.answer("Файл настроек был поврежден и его пришлось удалить. Сейчас создадим новый...")
+
         except FileNotFoundError:
             logger.error("Файл настроек не найден.")
             try:
                 self.u_settings.delete()
-            except:
-                pass
+            except Exception as e:
+                logger.error(f"Ошибка при удалении файла настроек: {e}")
             await self.message.answer("Файл настроек не найден. Сейчас создадим новый...")
 
     async def show_stats(self):
