@@ -44,8 +44,18 @@ class FuncGPT:
             messages=self.context,
             model=self.model,
             tools=self.funcs_desc,
-            tool_choice="auto"
+            tool_choice="auto",
+            extra_headers={ "X-Title": "Anna Prod" }
         )
+
+        # Отслеживание использования токенов
+        total_tokens = resp.usage.total_tokens
+        prompt_tokens = resp.usage.prompt_tokens
+        completion_tokens = resp.usage.completion_tokens
+
+        logger.info(f"[Func GPT] Tokens used: \nTotal - {total_tokens} \nQuestion - {prompt_tokens} \nAnswer - {completion_tokens}")
+        logger.info(f"Full response from assistant: {resp}")
+
 
         if resp.choices[0].message.tool_calls:
             func_name = resp.choices[0].message.tool_calls[0].function.name
@@ -64,8 +74,12 @@ class FuncGPT:
                 messages=self.context,
                 model=self.model,
                 tools=self.funcs_desc,
-                tool_choice="auto"
+                tool_choice="auto",
+                extra_headers={ "X-Title": "Anna Prod" }
             )
+
+            follow_up_tokens = follow_up.usage.total_tokens
+            logger.info(f"[Func GPT] Tokens used for follow-up: {follow_up_tokens}")
 
             final_output = follow_up.choices[0].message.content
             if final_output and isinstance(final_output, str):

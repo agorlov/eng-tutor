@@ -135,18 +135,19 @@ class AgentSessionPlanner:
         phrases = repetition.phrases()
         if not phrases:
             logger.error("PhrasesRepetition returned None or empty list")
-            phrases = []  # Инициализируем пустым списком для избежания ошибки
-            formatted_phrases = "\n".join(repetition.phrases())
-            logger.info("!Formatted phrases: %s", formatted_phrases)
+            #phrases = []  # Инициализируем пустым списком для избежания ошибки
+            phrases = ["No phrases available for repetition."]
+        formatted_phrases = "\n".join(phrases)
+        logger.info("!Formatted phrases: %s", formatted_phrases)
 
-            # Случайный вариант направления перевода
-            direction = [
-                "Suggest phrases in the user's native language for translation into the foreign language.",
-                "Suggest phrases in the foreign language for translation into the user's native language."
-            ]
+        # Случайный вариант направления перевода
+        direction = [
+            "Suggest phrases in the user's native language for translation into the foreign language.",
+            "Suggest phrases in the foreign language for translation into the user's native language."
+        ]
 
-            # Подстановка значений в промпт
-            return SESSION_PLANNER_INSTRUCTION.format(
-                PHRASES_FOR_REPETITION=formatted_phrases,
-                TRANSLATE_DIRECTION=random.choice(direction)
-            )
+        # Подстановка значений в промпт
+        return SESSION_PLANNER_INSTRUCTION.format(
+            PHRASES_FOR_REPETITION=formatted_phrases,
+            TRANSLATE_DIRECTION=random.choice(direction)
+        )

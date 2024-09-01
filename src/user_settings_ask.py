@@ -93,19 +93,18 @@ async def save_user_settings(callback_query: CallbackQuery):
     user_settings = UserSettings(user_id)
 
     user_settings.save(f"""Native language: {user_settings_handler.native_language}
-    Studied language: {user_settings_handler.studied_language}
-    Student level: {user_settings_handler.studied_level}
+Studied language: {user_settings_handler.studied_language}
+Student level: {user_settings_handler.studied_level}
         """)
 
-    await callback_query.message.answer("""
-    🎉 Настройки сохранены! 🌟
+    await callback_query.message.answer("""🎉 Настройки сохранены! 🌟
 
-    Отлично, теперь всё готово для эффективного обучения. 😊
+Отлично, теперь всё готово для эффективного обучения. 😊
 
-    Что ты хочешь сделать дальше?
+Что ты хочешь сделать дальше?
 
-    Хочешь продолжить обучение? Давай начнем! 📚
-    Есть вопросы или нужна помощь? Я всегда на связи, просто напиши! 📝
+Хочешь продолжить обучение? Давай начнем! 📚
+Есть вопросы или нужна помощь? Я всегда на связи, просто напиши! 📝
         """)
 
 
