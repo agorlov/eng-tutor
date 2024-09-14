@@ -5,8 +5,8 @@ from config import TG_BOT_TOKEN
 
 from faster_whisper import WhisperModel
 
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart, Command
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from src.agent_main import AgentMain
@@ -16,7 +16,9 @@ from src.agent_teacher import AgentTeacher
 from src.agent_archiver import AgentArchiver
 from src.user_saved import UserSaved
 from src.transcripted import Transcripted
-from src.user_settings_ask import router as handler_router, UserSettingsAsk
+
+from src.keyboards import Keyboards
+from src.routers import router as handler_router
 
 
 # Настроим логирование
@@ -63,8 +65,10 @@ def init_user_context(message: Message, user_id):
 @dp.message(CommandStart())
 async def start(message):
     user_id = message.from_user.id
+
     init_user_context(message, user_id)
-    user_settings_ask = UserSettingsAsk(user_id)
+
+    keyboards = Keyboards(user_id)
 
     user_language = message.from_user.language_code
     logger.info("!User Language: %s", user_language)
@@ -81,7 +85,7 @@ async def start(message):
 3. Нужен перевод? Просто напиши: "Переведи: твоя фраза или текст", и я на помощь! 📖
 
 Давай подберем для тебя настройки:
-        """, reply_markup=user_settings_ask.keyboard_settings())
+        """, reply_markup=keyboards.keyboard_settings())
     else:
         await message.answer("""
 🎉 Hi! My name is Anna. 🌟
@@ -94,7 +98,7 @@ Here's how it will work:
 3. Need a translation? Just write: "Translate: your phrase or text", and I’ll come to the rescue! 📖
  
 Let's select the settings for you:
-        """, reply_markup=user_settings_ask.keyboard_settings())
+        """, reply_markup=keyboards.keyboard_settings())
 
 @dp.message()
 async def respond(message: Message):
@@ -104,7 +108,7 @@ async def respond(message: Message):
     username = message.from_user.username
 
     #  Объявление объектов
-    transcripted = Transcripted(user_id, bot, whisper_model)
+    transcripted = Transcripted(user_id, user_context[user_id], bot, whisper_model)
     user_saved = UserSaved(user_id)
 
     #  Обработка голоса
@@ -112,8 +116,8 @@ async def respond(message: Message):
         agent = user_context[user_id]['agent']
 
         try:
-            lang = user_context[user_id]['settings']['Studied language']
-
+            #lang = user_context[user_id]['settings']['Studied language']
+            lang = 'En'
         except:
             lang = None
         audio_file_path = await transcripted.download_file(message, agent, lang)
@@ -129,13 +133,14 @@ async def respond(message: Message):
 
     #  Обработка текста
     if message.content_type == types.ContentType.TEXT:
-        logging.info(f"[Text] Rcv {user_id}: {message.text}")
+        logging.info(f"[Text] Rcv {user_id}: {message.text}") 
         init_user_context(message, user_id)
 
         agent = user_context[user_id]['agent']
         await agent.run(message.text)
 
     user_saved.save_user(username)
+
 
 async def main():
     await dp.start_polling(bot)

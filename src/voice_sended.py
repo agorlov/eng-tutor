@@ -5,6 +5,8 @@ import subprocess
 from TTS.api import TTS
 from aiogram.types import FSInputFile
 
+#from src.agent_teacher import AgentTeacher
+
 # Настраиваем логгер
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

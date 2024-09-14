@@ -1,5 +1,6 @@
 import logging
 from .state_switcher import StateSwitcher
+from src.keyboards import syntez
 
 # Настраиваем логгер
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,7 @@ class AnswerSwitcher:
         self.switcher = StateSwitcher(state)
         self.user_id = user_id
 
-    async def switch(self, answer: str) -> None:
+    async def switch(self, answer: str, agent) -> None:
         """
         Если в ответе есть SWITCH [Assistant Name], то переключаемся на другого ассистента,
         а если нет, то отправляем сообщение студенту
@@ -31,7 +32,19 @@ class AnswerSwitcher:
 
         if user_message:
             logger.info("!Answer to user: %s", user_message)
-            await self.message.answer(user_message)
+
+            
+            if self.state['agent'].__class__.__name__ == "AgentTeacher":
+                logger.info(f'AAAAAAAAAAAAAAAAAA SYNTEZ IS available\n')
+                logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
+                logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
+
+                await self.message.answer(user_message, reply_markup=syntez)
+            else:
+                logger.info(f'++++++++++++++ SYNTEZ IS NOT available')
+                logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
+                logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
+                await self.message.answer(user_message)
 
         if switch_message:
             firstline = switch_message.splitlines()[0]
