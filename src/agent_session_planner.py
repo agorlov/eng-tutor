@@ -108,7 +108,7 @@ class AgentSessionPlanner:
         answer = self.gpt.chat(task)
 
         answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
-        await answ_sw.switch(answer)
+        await answ_sw.switch(answer, self.state['agent'])
 
     @property
     def gpt(self):

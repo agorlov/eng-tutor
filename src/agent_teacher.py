@@ -34,7 +34,7 @@ If the student does not understand the pronunciation of the answer, you will be 
 4. If the translation is correct, confirm and provide the next phrase, be sure to add 'USER_SEND_CORRECT' to the beginning of your response.
 5. If the translation is incorrect and also contains at the beginning [Audio]: ', in addition to the correct translation, give the student at the beginning of the message what you “heard” (that is, what text you received from the student). And also ask him to translate correctly.
 6. If a student asks to voice the answer, return the following format: "CALL_VOICE_GENERATION: <Correct translation>"
-7. If you receive an answer with '[Audio]: ' at the beginning, this means that the answer was entered by voice input. Always send the student what you heard in advance. And always be sure to relay to the user the text you heard in the response message.
+7. If you receive a response with '[Audio]: ' at the beginning, it means that the response was entered using voice input. Always send the student what you heard beforehand. If the answer is not correct, always be sure to pass on to the user the text you heard in the response message. You should not write '[Audio]: ' in the response! You should indicate to the student what you heard and pass on to him what you heard in the form of: "You told me: [message]" or something similar and then the message.
 8. After the training session, praise the student and point out what to focus on. Mention how to more easily remember the spot where a mistake is made. You can use memory aids, provide a mnemonic rule if it's appropriate and one exists. However, the lesson summary should not exceed 60 words.
 9. Then switch to the Lesson Archiver agent using the "SWITCH Archiver" command and list phrases in format: (Correct;Phrase original;correct translation of the phrase).
 
@@ -101,11 +101,11 @@ class AgentTeacher:
             else:
                 await self.message.answer(f'Строка не схожа достаточно: {similarity_percentage}%')
 
-            # Обратите внимание на этот блок:
             answer = self.gpt.chat(f'[Audio + {similarity_percentage}%]: {text}')
 
         else:
             answer = self.gpt.chat(task)
+    
 
         if 'USER_SEND_CORRECT' in answer:
             if self.current_phrase_index < 6:
@@ -124,7 +124,7 @@ class AgentTeacher:
                 logger.info("No text to generate voice for.")
         else:
             answ_sw = AnswerSwitcher(self.state, self.message, self.user_id)
-            await answ_sw.switch(answer)
+            await answ_sw.switch(answer, self.state['agent'])
 
 
     @property

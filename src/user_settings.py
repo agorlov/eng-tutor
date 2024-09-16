@@ -13,6 +13,8 @@ class UserSettings:
         self.user_id = user_id
 
     def save(self, args):
+        pass
+        '''
         # Формируем путь к файлу настроек пользователя
         file_path = f'data/settings/{self.user_id}.txt'
 
@@ -21,18 +23,27 @@ class UserSettings:
             file.write(args)
 
         logger.info("!Настройки пользователя %s сохранены в файле %s", self.user_id, file_path)
+        '''
 
     def load(self):
-        file_path = os.path.join("data", "settings", f"{self.user_id}.txt")
+    
+        #file_path = os.path.join("data", "settings", f"{self.user_id}.txt")
+        file_path = os.path.join("data", "settings", f"default.txt")
         try:
             with open(file_path, "r") as file:
                 contents = file.read()
                 return contents
+
         except FileNotFoundError:
             logger.info("!!!!Settings for user %s not found!!!!", self.user_id)
             return ""
+    
+    
 
     def delete(self):
+        pass
+        '''
         file_path = f'data/settings/{self.user_id}.txt'
         os.remove(file_path)
         logger.info("!Файл %s.txt успешно удален", self.user_id)
+        '''

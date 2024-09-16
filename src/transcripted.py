@@ -5,7 +5,6 @@ import re
 import inflect
 import subprocess
 
-from src.agent_teacher import AgentTeacher
 from config import TG_BOT_TOKEN
 
 # Настроим логирование
@@ -14,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 class Transcripted:
     """Считано голосовое сообщение пользователя"""
-    def __init__(self, user_id, bot, whisper_model):
+    def __init__(self, user_id, state, bot, whisper_model):
         self.bot = bot
+        self.state = state
         self.user_id = user_id
         self.model = whisper_model
         self.model_language = None
@@ -24,11 +24,11 @@ class Transcripted:
 
     async def download_file(self, message, agent, lang):
         """Скачивание и сохранение полученного голосового сообщения от пользователя"""
-        self.model_language = lang.lower()
-        if not isinstance(agent, AgentTeacher):
+        if not self.state['agent'].__class__.__name__ == "AgentTeacher":
             await message.answer('Распознавание недоступно. Введите текст.')
             return None
-
+        
+        self.model_language = lang.lower()
         file_url = await self._get_file_url(message.voice.file_id)
         if file_url is None:
             return None

@@ -1,10 +1,10 @@
 import logging
-
 from aiogram import Router, F
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import CallbackQuery
 
+from src.keyboards import Keyboards, start
 from src.user_settings import UserSettings
+
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -14,32 +14,10 @@ router = Router(name=__name__)
 
 user_settings_dict = {}
 
-class UserSettingsAsk:
-    """Кнопки для выбора настроек пользователя"""
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.builder = InlineKeyboardBuilder()
-        self.native_language = None
-        self.studied_language = None
-        self.studied_level = None
-
-    def keyboard_settings(self):
-        self.builder.button(text="Поменять настройки", callback_data="change")
-        self.builder.button(text="Удалить настройки", callback_data="delete")
-        self.builder.adjust(2, 1)
-        return self.builder.as_markup()
-
-    def generate_keyboard(self, options, callback_prefix):
-        self.builder = InlineKeyboardBuilder()  # Обнуление билдера перед генерацией клавиатуры
-        for option in options:
-            self.builder.button(text=option[0], callback_data=f"{callback_prefix}_{option[1]}")
-        self.builder.adjust(1, 3)
-        return self.builder.as_markup()
-
 @router.callback_query(F.data == "change")
 async def change_settings(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    user_settings_handler = UserSettingsAsk(user_id)
+    user_settings_handler = Keyboards(user_id)
     user_settings_dict[user_id] = user_settings_handler  # Сохраняем объект в словарь
 
     await callback_query.answer("Изменение настроек...")
@@ -105,17 +83,4 @@ Student level: {user_settings_handler.studied_level}
 
 Хочешь продолжить обучение? Давай начнем! 📚
 Есть вопросы или нужна помощь? Я всегда на связи, просто напиши! 📝
-        """)
-
-
-@router.callback_query(F.data == "delete")
-async def delete_settings(callback_query: CallbackQuery):
-    user_id = callback_query.from_user.id
-    user_settings = UserSettings(user_id)
-
-    await callback_query.answer("Удаление настроек...")
-    try:
-        user_settings.delete()
-        await callback_query.message.answer("Настройки удалены")
-    except Exception as e:
-        await callback_query.message.answer(f"Ошибка удаления настроек: {str(e)}")
+        """, reply_markup=start)
