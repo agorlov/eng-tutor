@@ -35,15 +35,13 @@ class AnswerSwitcher:
 
             
             if self.state['agent'].__class__.__name__ == "AgentTeacher":
-                logger.info(f'AAAAAAAAAAAAAAAAAA SYNTEZ IS available\n')
-                logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
-                logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
+                #logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
+                #logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
 
                 await self.message.answer(user_message, reply_markup=syntez)
             else:
-                logger.info(f'++++++++++++++ SYNTEZ IS NOT available')
-                logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
-                logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
+                #logger.info(f"SELF STATE AGENT:\n{self.state['agent']}")
+                #logger.info(f"CLASS STATE AGENT:\n{self.state['agent'].__class__.__name__}\n")
                 await self.message.answer(user_message)
 
         if switch_message:

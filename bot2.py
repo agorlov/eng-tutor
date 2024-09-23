@@ -3,7 +3,7 @@ import asyncio
 
 from config import TG_BOT_TOKEN
 
-from faster_whisper import WhisperModel
+#from faster_whisper import WhisperModel
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=TG_BOT_TOKEN)
 dp = Dispatcher()
 
-whisper_model = WhisperModel("base", device="cpu", compute_type="int8")  # whisper: 'tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2'
+#whisper_model = WhisperModel("base", device="cpu", compute_type="int8")  # whisper: 'tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2'
 
 dp.include_router(handler_router)
 
@@ -108,19 +108,21 @@ async def respond(message: Message):
     username = message.from_user.username
 
     #  Объявление объектов
-    transcripted = Transcripted(user_id, user_context[user_id], bot, whisper_model)
+    #transcripted = Transcripted(user_id, user_context[user_id], bot, whisper_model)
+    transcripted = Transcripted(user_id, bot)
     user_saved = UserSaved(user_id)
 
     #  Обработка голоса
     if message.content_type == types.ContentType.VOICE:
         agent = user_context[user_id]['agent']
-
-        try:
-            #lang = user_context[user_id]['settings']['Studied language']
-            lang = 'En'
-        except:
-            lang = None
-        audio_file_path = await transcripted.download_file(message, agent, lang)
+        
+        # try:
+        #     #lang = user_context[user_id]['settings']['Studied language']
+        #     lang = 'En'
+        # except:
+        #     lang = None
+        #audio_file_path = await transcripted.download_file(message, agent, lang)
+        audio_file_path = await transcripted.download_file(message, agent)
 
         if audio_file_path:
             audio_answer = f'[Audio]: {await transcripted.transcription(audio_file_path, message)}'
