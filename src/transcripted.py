@@ -3,32 +3,33 @@ import aiohttp
 import os
 import re
 import inflect
-import subprocess
 
-from config import TG_BOT_TOKEN
+from speechkit import model_repository, configure_credentials, creds
+from speechkit.stt import AudioProcessingType
+
+from src.agent_teacher import AgentTeacher
+from config import TG_BOT_TOKEN, YANDEX_API_stt
 
 # Настроим логирование
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class Transcripted:
-    """Считано голосовое сообщение пользователя"""
-    def __init__(self, user_id, state, bot, whisper_model):
+    def __init__(self, user_id, bot):
         self.bot = bot
-        self.state = state
         self.user_id = user_id
-        self.model = whisper_model
-        self.model_language = None
+        self.model = model_repository.recognition_model()
+        self.model.model = 'general'
+        self.model.language = 'en-EN'
+        self.model.audio_processing_type = AudioProcessingType.Full
+        self.result = None
         self.inflect_engine = inflect.engine()
 
-
-    async def download_file(self, message, agent, lang):
-        """Скачивание и сохранение полученного голосового сообщения от пользователя"""
-        if not self.state['agent'].__class__.__name__ == "AgentTeacher":
+    async def download_file(self, message, agent):
+        if not isinstance(agent, AgentTeacher):
             await message.answer('Распознавание недоступно. Введите текст.')
             return None
-        
-        self.model_language = lang.lower()
+
         file_url = await self._get_file_url(message.voice.file_id)
         if file_url is None:
             return None
@@ -49,7 +50,7 @@ class Transcripted:
             return None
 
     async def _save_file(self, file_url, file_name):
-        """Сохранение файла по URL."""
+        """Сохранение файла по указанному URL."""
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(file_url) as resp:
@@ -64,24 +65,6 @@ class Transcripted:
             logging.error(f"Error saving file: {e}")
             return False
 
-    def _convert_ogg_to_wav(self, input_file, output_file):
-        """Конвертация OGG в WAV."""
-        try:
-            result = subprocess.run(
-                ['ffmpeg', '-i', input_file, '-ar', '16000', '-ac', '1', output_file],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            if result.returncode == 0 and os.path.exists(output_file) and os.path.getsize(output_file) > 0:
-                return True
-            else:
-                logging.error(f"ffmpeg error: {result.stderr}")
-                return False
-        except Exception as e:
-            logging.error(f"Error during ffmpeg conversion: {e}")
-            return False
-          
     def replace_numbers_with_text(self, text):
         """Замена чисел в тексте на текстовые представления."""
         return re.sub(r'\d+', self._number_to_words, text)
@@ -92,31 +75,20 @@ class Transcripted:
         return self.inflect_engine.number_to_words(number)
 
     async def transcription(self, audio_file_path, message):
-        audio_file_path_wav = f'{audio_file_path}.wav'
+        """Распознавание речи и обработка результата."""
+        configure_credentials(
+            yandex_credentials=creds.YandexCredentials(api_key=YANDEX_API_stt)
+        )
         try:
-            # Конвертация OGG в WAV
-            if not self._convert_ogg_to_wav(audio_file_path, audio_file_path_wav):
-                await message.answer("Ошибка при конвертации аудиофайла в формат WAV.")
-                return
-            try:
-                segments, info = self.model.transcribe(audio_file_path, language=self.model_language, beam_size=5)
-                recognized_text = " ".join([segment.text for segment in segments])
-                recognized_text = self.replace_numbers_with_text(recognized_text)
-                # logging.info(f"Recognized text: {recognized_text}")
-                return str(recognized_text)
-
-            except Exception as e:
-                logging.error(f"Error during recognition: {e}")
-                await message.answer("Произошла ошибка при распознавании.")
+            self.result = self.model.transcribe_file(audio_file_path)
+            return self.replace_numbers_with_text(str(self.result[0]))
         except Exception as e:
-            logging.error(f"Error during file processing: {e}")
-            await message.answer("Произошла ошибка при обработке аудиофайла.")
+            logging.error(f"Error during recognition: {e}")
+            await message.answer("Произошла ошибка при распознавании.")
         finally:
-            self._cleanup(audio_file_path, audio_file_path_wav)
+            self._cleanup(audio_file_path)
 
-    def _cleanup(self, file_path, file_path_wav):
+    def _cleanup(self, file_path):
         """Удаление временного файла."""
         if os.path.exists(file_path):
             os.remove(file_path)
-        if os.path.exists(file_path_wav):
-            os.remove(file_path_wav)

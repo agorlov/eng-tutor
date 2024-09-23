@@ -10,3 +10,6 @@ DBCONN = {
 }
 
 OPENAI_API_KEY = "sk-..."
+
+# Yandex SpeechToText Toolkit API
+YANDEX_API_stt = "...."

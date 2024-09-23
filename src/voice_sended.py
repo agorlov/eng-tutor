@@ -47,7 +47,6 @@ class VoiceSended:
             try:
                 audio = FSInputFile(path=self.opus_output_file)
                 await self.bot.send_audio(self.user_id, audio=audio)
-                logger.info("!!! AUDIO FILE WAS SENT !!!")
             except Exception as e:
                 logger.error("Error sending audio file: %s", e)
             finally:

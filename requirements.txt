@@ -1,6 +1,6 @@
 asyncio
 aiogram
-faster_whisper
+yandex-speechkit
 psycopg2
 openai
 inflect
